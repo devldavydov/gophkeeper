@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package proto;
+
+import "internal/grpc/proto/user.proto";
+
+option go_package = "internal/grpc";
+
+service GophKeeperService {
+  // User
+  rpc UserCreate(User) returns (UserAuthToken);
+  rpc UserLogin(User) returns (UserAuthToken);
+}
