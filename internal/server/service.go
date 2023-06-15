@@ -2,19 +2,22 @@
 package server
 
 import (
-	"time"
+	"context"
 
 	"github.com/sirupsen/logrus"
 )
 
 // Service represents GophKeeper server.
 type Service struct {
-	settings        *ServiceSettings
-	logger          *logrus.Logger
-	shutdownTimeout time.Duration
+	settings *ServiceSettings
+	logger   *logrus.Logger
 }
 
 // NewService creates new Service object.
-func NewService(settings *ServiceSettings, shutdownTimeout time.Duration, logger *logrus.Logger) *Service {
-	return &Service{settings: settings, logger: logger, shutdownTimeout: shutdownTimeout}
+func NewService(settings *ServiceSettings, logger *logrus.Logger) *Service {
+	return &Service{settings: settings, logger: logger}
+}
+
+func (s *Service) Start(ctx context.Context) error {
+	return nil
 }
