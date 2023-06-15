@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v7"
+	"github.com/devldavydov/gophkeeper/internal/common/nettools"
+	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	"github.com/devldavydov/gophkeeper/internal/server"
 )
 
@@ -62,7 +64,19 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 }
 
 func ServerSettingsAdapt(config *Config) (*server.ServiceSettings, error) {
+	grpcAddress, err := nettools.NewAddress(config.GRPCAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	grpcServerTLS, err := gkTLS.NewServerSettings(config.GRPCServerTLSCert, config.GRPCServerTLSKey)
+	if err != nil {
+		return nil, err
+	}
+
 	serverSettings := server.NewServiceSettings(
+		grpcAddress,
+		grpcServerTLS,
 		config.DatabaseDsn,
 		config.ServerSecret,
 		config.ShutdownTimeout,

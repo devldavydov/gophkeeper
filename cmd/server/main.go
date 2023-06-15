@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	"github.com/devldavydov/gophkeeper/internal/common/info"
-	_log "github.com/devldavydov/gophkeeper/internal/common/log"
+	gkLog "github.com/devldavydov/gophkeeper/internal/common/log"
 	"github.com/devldavydov/gophkeeper/internal/server"
 )
 
@@ -36,7 +36,7 @@ func run() error {
 		return fmt.Errorf("failed to load flag and ENV settings: %w", err)
 	}
 
-	logger, err := _log.NewLogger(config.LogLevel)
+	logger, err := gkLog.NewLogger(config.LogLevel)
 	if err != nil {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
