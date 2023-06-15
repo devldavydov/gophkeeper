@@ -2,12 +2,20 @@ syntax = "proto3";
 
 package proto;
 
+import "internal/grpc/proto/secret.proto";
 import "internal/grpc/proto/user.proto";
 
 option go_package = "internal/grpc";
+
+message Empty {}
 
 service GophKeeperService {
   // User
   rpc UserCreate(User) returns (UserAuthToken);
   rpc UserLogin(User) returns (UserAuthToken);
+  // Secret
+  rpc SecretGetList(Empty) returns (SecretList);
+  rpc SecretGet(Secret) returns (Secret);
+  rpc SecretSet(Secret) returns (Empty);
+  rpc SecretDel(Secret) returns (Empty);
 }

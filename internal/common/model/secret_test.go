@@ -75,9 +75,8 @@ func TestPayloadString(t *testing.T) {
 
 func TestPayloadMsgpConversion(t *testing.T) {
 	for i, tt := range []struct {
-		input   msgp.Encodable
-		output  msgp.Decodable
-		fnCheck func(decoded any)
+		input  msgp.Encodable
+		output msgp.Decodable
 	}{
 		{input: NewCredsPayload("foo", "bar"), output: &CredsPayload{}},
 		{input: NewTextPayload("foobar"), output: &TextPayload{}},
@@ -86,7 +85,7 @@ func TestPayloadMsgpConversion(t *testing.T) {
 	} {
 		tt := tt
 		t.Run(fmt.Sprintf("Run %d", i), func(t *testing.T) {
-			assert.NoError(t, gkMsgp.Serde(tt.input, tt.output))
+			assert.NoError(t, gkMsgp.SerDe(tt.input, tt.output))
 			assert.Equal(t, tt.input, tt.output)
 			assert.True(t, tt.output.(Payload).Valid())
 		})
@@ -97,6 +96,38 @@ func TestPayloadMsgpInvalidConversion(t *testing.T) {
 	input := NewCredsPayload("foo", "bar")
 	output := &CardPayload{}
 
-	assert.NoError(t, gkMsgp.Serde(input, output))
+	assert.NoError(t, gkMsgp.SerDe(input, output))
 	assert.False(t, output.Valid())
+}
+
+func TestSecretGetPayload(t *testing.T) {
+	for i, tt := range []struct {
+		input      msgp.Encodable
+		secretType SecretType
+		isErr      bool
+	}{
+		{input: NewCredsPayload("foo", "bar"), secretType: CredsSecret},
+		{input: NewTextPayload("foo"), secretType: TextSecret},
+		{input: NewBinaryPayload([]byte("foo")), secretType: BinarySecret},
+		{input: NewCardPayload("2202", "foo", "11/26", "777"), secretType: CardSecret},
+		{input: NewCredsPayload("foo", "bar"), secretType: UnknownSecret, isErr: true},
+		{input: NewCredsPayload("foo", "bar"), secretType: SecretType(100), isErr: true},
+		{input: NewCredsPayload("foo", "bar"), secretType: BinarySecret, isErr: true},
+	} {
+		tt := tt
+		t.Run(fmt.Sprintf("Run %d", i), func(t *testing.T) {
+			data, err := gkMsgp.Serialize(tt.input)
+			assert.NoError(t, err)
+
+			secret := &Secret{Type: tt.secretType, PayloadRaw: data}
+			payload, err := secret.GetPayload()
+			if tt.isErr {
+				assert.Error(t, err)
+			} else {
+				expPayload, ok := tt.input.(Payload)
+				assert.True(t, ok)
+				assert.Equal(t, expPayload.String(), payload.String())
+			}
+		})
+	}
 }

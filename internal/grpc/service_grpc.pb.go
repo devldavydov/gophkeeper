@@ -19,8 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GophKeeperService_UserCreate_FullMethodName = "/proto.GophKeeperService/UserCreate"
-	GophKeeperService_UserLogin_FullMethodName  = "/proto.GophKeeperService/UserLogin"
+	GophKeeperService_UserCreate_FullMethodName    = "/proto.GophKeeperService/UserCreate"
+	GophKeeperService_UserLogin_FullMethodName     = "/proto.GophKeeperService/UserLogin"
+	GophKeeperService_SecretGetList_FullMethodName = "/proto.GophKeeperService/SecretGetList"
+	GophKeeperService_SecretGet_FullMethodName     = "/proto.GophKeeperService/SecretGet"
+	GophKeeperService_SecretSet_FullMethodName     = "/proto.GophKeeperService/SecretSet"
+	GophKeeperService_SecretDel_FullMethodName     = "/proto.GophKeeperService/SecretDel"
 )
 
 // GophKeeperServiceClient is the client API for GophKeeperService service.
@@ -30,6 +34,11 @@ type GophKeeperServiceClient interface {
 	// User
 	UserCreate(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserAuthToken, error)
 	UserLogin(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserAuthToken, error)
+	// Secret
+	SecretGetList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SecretList, error)
+	SecretGet(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Secret, error)
+	SecretSet(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error)
+	SecretDel(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type gophKeeperServiceClient struct {
@@ -58,6 +67,42 @@ func (c *gophKeeperServiceClient) UserLogin(ctx context.Context, in *User, opts 
 	return out, nil
 }
 
+func (c *gophKeeperServiceClient) SecretGetList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SecretList, error) {
+	out := new(SecretList)
+	err := c.cc.Invoke(ctx, GophKeeperService_SecretGetList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperServiceClient) SecretGet(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Secret, error) {
+	out := new(Secret)
+	err := c.cc.Invoke(ctx, GophKeeperService_SecretGet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperServiceClient) SecretSet(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, GophKeeperService_SecretSet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperServiceClient) SecretDel(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, GophKeeperService_SecretDel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GophKeeperServiceServer is the server API for GophKeeperService service.
 // All implementations must embed UnimplementedGophKeeperServiceServer
 // for forward compatibility
@@ -65,6 +110,11 @@ type GophKeeperServiceServer interface {
 	// User
 	UserCreate(context.Context, *User) (*UserAuthToken, error)
 	UserLogin(context.Context, *User) (*UserAuthToken, error)
+	// Secret
+	SecretGetList(context.Context, *Empty) (*SecretList, error)
+	SecretGet(context.Context, *Secret) (*Secret, error)
+	SecretSet(context.Context, *Secret) (*Empty, error)
+	SecretDel(context.Context, *Secret) (*Empty, error)
 	mustEmbedUnimplementedGophKeeperServiceServer()
 }
 
@@ -77,6 +127,18 @@ func (UnimplementedGophKeeperServiceServer) UserCreate(context.Context, *User) (
 }
 func (UnimplementedGophKeeperServiceServer) UserLogin(context.Context, *User) (*UserAuthToken, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
+}
+func (UnimplementedGophKeeperServiceServer) SecretGetList(context.Context, *Empty) (*SecretList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SecretGetList not implemented")
+}
+func (UnimplementedGophKeeperServiceServer) SecretGet(context.Context, *Secret) (*Secret, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SecretGet not implemented")
+}
+func (UnimplementedGophKeeperServiceServer) SecretSet(context.Context, *Secret) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SecretSet not implemented")
+}
+func (UnimplementedGophKeeperServiceServer) SecretDel(context.Context, *Secret) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SecretDel not implemented")
 }
 func (UnimplementedGophKeeperServiceServer) mustEmbedUnimplementedGophKeeperServiceServer() {}
 
@@ -127,6 +189,78 @@ func _GophKeeperService_UserLogin_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GophKeeperService_SecretGetList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServiceServer).SecretGetList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeperService_SecretGetList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServiceServer).SecretGetList(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeperService_SecretGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Secret)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServiceServer).SecretGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeperService_SecretGet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServiceServer).SecretGet(ctx, req.(*Secret))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeperService_SecretSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Secret)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServiceServer).SecretSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeperService_SecretSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServiceServer).SecretSet(ctx, req.(*Secret))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeperService_SecretDel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Secret)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServiceServer).SecretDel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeperService_SecretDel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServiceServer).SecretDel(ctx, req.(*Secret))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GophKeeperService_ServiceDesc is the grpc.ServiceDesc for GophKeeperService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -141,6 +275,22 @@ var GophKeeperService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserLogin",
 			Handler:    _GophKeeperService_UserLogin_Handler,
+		},
+		{
+			MethodName: "SecretGetList",
+			Handler:    _GophKeeperService_SecretGetList_Handler,
+		},
+		{
+			MethodName: "SecretGet",
+			Handler:    _GophKeeperService_SecretGet_Handler,
+		},
+		{
+			MethodName: "SecretSet",
+			Handler:    _GophKeeperService_SecretSet_Handler,
+		},
+		{
+			MethodName: "SecretDel",
+			Handler:    _GophKeeperService_SecretDel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

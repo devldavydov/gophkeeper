@@ -1,6 +1,18 @@
 // Package model represents data structures for GophKeeper.
 package model
 
+import (
+	"errors"
+
+	gkMsgp "github.com/devldavydov/gophkeeper/internal/common/msgp"
+	"github.com/tinylib/msgp/msgp"
+)
+
+var (
+	ErrUnknownPayload = errors.New("unknown secret payload")
+	ErrInvalidPayload = errors.New("invalid secret payload")
+)
+
 // SecretType is an enum type for secret types.
 type SecretType int
 
@@ -38,6 +50,33 @@ type Secret struct {
 	PayloadRaw []byte
 }
 
-func (s *Secret) GetPayload() Payload {
-	return nil
+// GetPayload returns Payload from binary raw.
+func (s *Secret) GetPayload() (Payload, error) {
+	var decObj msgp.Decodable
+
+	switch s.Type {
+	case CredsSecret:
+		decObj = &CredsPayload{}
+	case TextSecret:
+		decObj = &TextPayload{}
+	case BinarySecret:
+		decObj = &BinaryPayload{}
+	case CardSecret:
+		decObj = &CardPayload{}
+	case UnknownSecret:
+		return nil, ErrUnknownPayload
+	default:
+		return nil, ErrUnknownPayload
+	}
+
+	if err := gkMsgp.Deserialize(s.PayloadRaw, decObj); err != nil {
+		return nil, err
+	}
+
+	payload, ok := decObj.(Payload)
+	if !ok || !payload.Valid() {
+		return nil, ErrInvalidPayload
+	}
+
+	return payload, nil
 }
