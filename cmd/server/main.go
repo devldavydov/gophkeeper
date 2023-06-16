@@ -15,6 +15,7 @@ import (
 	"github.com/devldavydov/gophkeeper/internal/common/info"
 	gkLog "github.com/devldavydov/gophkeeper/internal/common/log"
 	"github.com/devldavydov/gophkeeper/internal/server"
+	_ "github.com/lib/pq"
 )
 
 var (
