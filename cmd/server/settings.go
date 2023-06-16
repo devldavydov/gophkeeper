@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -11,6 +12,8 @@ import (
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	"github.com/devldavydov/gophkeeper/internal/server"
 )
+
+var errInvalidSettings = errors.New("invalid settings")
 
 const (
 	_defaultConfigGRPCAddress       = "127.0.0.1:8080"
@@ -33,6 +36,7 @@ type Config struct {
 	ShutdownTimeout   time.Duration `env:"SHUTDOWN_TIMEOUT"`
 }
 
+// LoadConfig loads server configuration from flags/env.
 func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	var err error
 	config := &Config{}
@@ -50,10 +54,8 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		flagSet.PrintDefaults()
 	}
-	err = flagSet.Parse(flags)
-	if err != nil {
-		return nil, err
-	}
+
+	_ = flagSet.Parse(flags)
 
 	// Check env
 	if err = env.Parse(config); err != nil {
@@ -63,7 +65,8 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	return config, nil
 }
 
-func ServerSettingsAdapt(config *Config) (*server.ServiceSettings, error) {
+// ServiceSettingsAdapt converts configuration to server service settings.
+func ServiceSettingsAdapt(config *Config) (*server.ServiceSettings, error) {
 	grpcAddress, err := nettools.NewAddress(config.GRPCAddress)
 	if err != nil {
 		return nil, err
@@ -72,6 +75,10 @@ func ServerSettingsAdapt(config *Config) (*server.ServiceSettings, error) {
 	grpcServerTLS, err := gkTLS.NewServerSettings(config.GRPCServerTLSCert, config.GRPCServerTLSKey)
 	if err != nil {
 		return nil, err
+	}
+
+	if config.DatabaseDsn == "" {
+		return nil, errInvalidSettings
 	}
 
 	serverSettings := server.NewServiceSettings(

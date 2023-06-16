@@ -1,3 +1,4 @@
+// Package log contains util functions for logging.
 package log
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// NewLogger creates logger.
 func NewLogger(logLevel string) (*logrus.Logger, error) {
 	logger := logrus.New()
 	logLvl, err := logrus.ParseLevel(logLevel)

@@ -1,3 +1,4 @@
+// Package represents main application for client.
 package main
 
 import (

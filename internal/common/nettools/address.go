@@ -16,6 +16,7 @@ type Address struct {
 	Port int
 }
 
+// NewAddress creates new Address object.
 func NewAddress(addr string) (*Address, error) {
 	parts := strings.Split(addr, ":")
 	if len(parts) != 2 { //nolint:gomnd // No magic numbers

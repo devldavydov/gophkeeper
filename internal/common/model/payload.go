@@ -22,6 +22,7 @@ type CredsPayload struct {
 
 var _ Payload = (*CredsPayload)(nil)
 
+// NewCredsPayload creates new CredsPayload object.
 func NewCredsPayload(login, password string) *CredsPayload {
 	cp := &CredsPayload{Login: login, Password: password}
 	cp.Hash = cp.hash()
@@ -48,6 +49,7 @@ type TextPayload struct {
 
 var _ Payload = (*TextPayload)(nil)
 
+// NewTextPayload creates new TextPayload object.
 func NewTextPayload(data string) *TextPayload {
 	tp := &TextPayload{Data: data}
 	tp.Hash = tp.hash()
@@ -74,6 +76,7 @@ type BinaryPayload struct {
 
 var _ Payload = (*BinaryPayload)(nil)
 
+// NewBinaryPayload creates new BinaryPayload object.
 func NewBinaryPayload(data []byte) *BinaryPayload {
 	bp := &BinaryPayload{Data: data}
 	bp.Hash = bp.hash()
@@ -103,6 +106,7 @@ type CardPayload struct {
 
 var _ Payload = (*CardPayload)(nil)
 
+// NewCardPayload creates new CardPayload object.
 func NewCardPayload(cardNum, cardHolder, validThru, cvv string) *CardPayload {
 	cp := &CardPayload{CardNum: cardNum, CardHolder: cardHolder, ValidThru: validThru, CVV: cvv}
 	cp.Hash = cp.hash()

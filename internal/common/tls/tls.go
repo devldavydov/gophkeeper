@@ -17,6 +17,7 @@ type ServerSettings struct {
 	ServerKeyPath  string
 }
 
+// NewServerSettings creates new ServerSettings object.
 func NewServerSettings(certPath, keyPath string) (*ServerSettings, error) {
 	if certPath == "" || keyPath == "" {
 		return nil, errors.New("invalid TLS server settings")
@@ -40,6 +41,7 @@ func (t *ServerSettings) Load() (credentials.TransportCredentials, error) {
 	return credentials.NewTLS(config), nil
 }
 
+// LoadCACert loads CA certificate from file.
 func LoadCACert(caCertPath string, customServerName string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(caCertPath)
 	if err != nil {

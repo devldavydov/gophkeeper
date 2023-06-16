@@ -1,7 +1,9 @@
+// Package info contains util functions about app.
 package info
 
 import "fmt"
 
+// FormatVersion formats app version.
 func FormatVersion(version, date, commit string) string {
 	formatVar := func(s string) string {
 		if s == "" {

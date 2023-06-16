@@ -1,3 +1,5 @@
+// Package represents main application for server.
+//
 //nolint:gochecknoglobals // build inline variable
 package main
 
@@ -41,7 +43,7 @@ func run() error {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
 
-	serverSettings, err := ServerSettingsAdapt(config)
+	serverSettings, err := ServiceSettingsAdapt(config)
 	if err != nil {
 		return fmt.Errorf("failed to create server settings: %w", err)
 	}
