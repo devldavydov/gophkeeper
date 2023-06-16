@@ -18,4 +18,6 @@ service GophKeeperService {
   rpc SecretGet(Secret) returns (Secret);
   rpc SecretSet(Secret) returns (Empty);
   rpc SecretDel(Secret) returns (Empty);
+  // Other
+  rpc Ping(Empty) returns (Empty);
 }

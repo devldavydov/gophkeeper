@@ -3,13 +3,23 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
+	"github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	_databaseInitTimeout = 10 * time.Second
+	_databaseInitTimeout time.Duration = 10 * time.Second
+
+	_constraintUniqueViolation pq.ErrorCode = "23505"
+	_constraintUsernameCheck   string       = "users_username_key"
+)
+
+var (
+	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserNotFound      = errors.New("user not found")
 )
 
 // PgStorage is a Storage implementation for PostgreSQL database.
@@ -36,6 +46,56 @@ func NewPgStorage(pgConnString string, logger *logrus.Logger) (*PgStorage, error
 
 var _ Storage = (*PgStorage)(nil)
 
+func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (int, error) {
+	tx, err := pg.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	var userID int
+	err = tx.QueryRowContext(ctx, _sqlCreateUser, login, password).Scan(&userID)
+	if err != nil {
+		var pqErr *pq.Error
+		if !errors.As(err, &pqErr) {
+			return 0, err
+		}
+
+		if pqErr.Code == _constraintUniqueViolation && pqErr.Constraint == _constraintUsernameCheck {
+			return 0, ErrUserAlreadyExists
+		}
+
+		return 0, err
+	}
+
+	return userID, tx.Commit()
+}
+
+func (pg *PgStorage) FindUser(ctx context.Context, login string) (int, string, error) {
+	var userID int
+	var userPassword string
+	err := pg.db.QueryRowContext(ctx, _sqlFindUser, login).Scan(&userID, &userPassword)
+	switch {
+	case err == sql.ErrNoRows:
+		return 0, "", ErrUserNotFound
+	case err != nil:
+		return 0, "", err
+	}
+
+	return userID, userPassword, nil
+}
+
+func (pg *PgStorage) Ping(ctx context.Context) bool {
+	if err := pg.db.PingContext(ctx); err != nil {
+		pg.logger.Errorf("Failed to ping database, err: %v", err)
+		return false
+	}
+
+	return true
+}
+
 func (pg *PgStorage) Close() {
 	if pg.db == nil {
 		return
@@ -51,7 +111,7 @@ func (pg *PgStorage) init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), _databaseInitTimeout)
 	defer cancel()
 
-	for _, createTbl := range []string{} {
+	for _, createTbl := range []string{_sqlCreateTableUser} {
 		_, err := pg.db.ExecContext(ctx, createTbl)
 		if err != nil {
 			return err

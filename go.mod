@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/caarlos0/env/v7 v7.1.0
+	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.9
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
