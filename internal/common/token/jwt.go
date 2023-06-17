@@ -9,6 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const HeaderName = "JWT_TOKEN"
+
 var ErrInvalidToken = errors.New("invalid token")
 
 // NewJWTForUser creates new JWT token for user.
@@ -22,7 +24,8 @@ func NewJWTForUser(userID int64, expirationInterval time.Duration, secret []byte
 	return token.SignedString(secret)
 }
 
-func GetUserFromJWT(tokenString string, secret []byte) (int64, error) {
+// GetUserFromJWT get user id as string from token.
+func GetUserFromJWT(tokenString string, secret []byte) (string, error) {
 	var token *jwt.Token
 	var err error
 
@@ -40,18 +43,12 @@ func GetUserFromJWT(tokenString string, secret []byte) (int64, error) {
 	)
 
 	if err != nil {
-		return 0, ErrInvalidToken
+		return "", ErrInvalidToken
 	}
 
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
-		var userID int64
-
-		userID, err = strconv.ParseInt(claims.ID, 10, 64)
-		if err != nil {
-			return 0, ErrInvalidToken
-		}
-		return userID, nil
+		return claims.ID, nil
 	}
 
-	return 0, ErrInvalidToken
+	return "", ErrInvalidToken
 }

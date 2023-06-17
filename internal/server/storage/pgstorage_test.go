@@ -26,13 +26,13 @@ type PgStorageSuite struct {
 	stg *PgStorage
 }
 
-func (pg *PgStorageSuite) SetupTest() {
+func (pg *PgStorageSuite) SetupSuite() {
 	var err error
 	pg.stg, err = NewPgStorage(os.Getenv(_envTestDatabaseDsn), logger)
 	require.NoError(pg.T(), err)
 }
 
-func (pg *PgStorageSuite) TearDownTest() {
+func (pg *PgStorageSuite) TearDownSuite() {
 	pg.stg.Close()
 }
 
@@ -86,7 +86,9 @@ func (pg *PgStorageSuite) TestFindUser() {
 }
 
 func TestPgStorageSuite(t *testing.T) {
+	// TODO: REMOVE AFTER ALL TESTS
 	// t.Setenv(_envTestDatabaseDsn, "postgres://postgres:postgres@127.0.0.1:5432/praktikum?sslmode=disable")
+	//
 	_, ok := os.LookupEnv(_envTestDatabaseDsn)
 	if !ok {
 		t.Skip("Test environment not set")

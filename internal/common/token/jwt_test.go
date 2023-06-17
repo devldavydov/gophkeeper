@@ -1,6 +1,7 @@
 package token
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestJWTToken(t *testing.T) {
 				assert.ErrorIs(t, err, ErrInvalidToken)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, userID, tokenUserID)
+				assert.Equal(t, strconv.FormatInt(userID, 10), tokenUserID)
 			}
 		})
 	}

@@ -41,7 +41,7 @@ func (s *Service) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to setup gRPC listen: %w", err)
 	}
 
-	grpcSrv, _ := NewGrpcServer(stg, tlsCredentials, s.logger)
+	grpcSrv, _ := NewGrpcServer(stg, tlsCredentials, []byte(s.settings.ServerSecret), s.logger)
 
 	errChan := make(chan error)
 	go func(ch chan error) {

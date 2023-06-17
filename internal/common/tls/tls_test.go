@@ -39,7 +39,6 @@ func TestLoadCACert(t *testing.T) {
 
 	_, err = LoadCACert(getTLSFile("ca-cert.pem"), "test")
 	assert.NoError(t, err)
-
 }
 
 func getTLSFile(fileName string) string {
