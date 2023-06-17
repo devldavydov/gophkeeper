@@ -60,7 +60,7 @@ func (pg *PgStorageSuite) TestCreateUser() {
 }
 
 func (pg *PgStorageSuite) TestFindUser() {
-	var userID int
+	var userID int64
 
 	userName, userPassword := uuid.NewString(), uuid.NewString()
 	ctx, cancel := context.WithTimeout(context.Background(), _testDBTimeout)

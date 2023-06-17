@@ -4,7 +4,7 @@ const (
 	// Users.
 	_sqlCreateTableUser = `
 		CREATE TABLE IF NOT EXISTS users (
-			id         serial                   NOT NULL,
+			id         bigserial                NOT NULL,
 			username   text                     NOT NULL,
 			password   text                     NOT NULL,
 			created_at timestamp with time zone NOT NULL DEFAULT now(),

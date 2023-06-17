@@ -46,7 +46,7 @@ func NewPgStorage(pgConnString string, logger *logrus.Logger) (*PgStorage, error
 
 var _ Storage = (*PgStorage)(nil)
 
-func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (int, error) {
+func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (int64, error) {
 	tx, err := pg.db.Begin()
 	if err != nil {
 		return 0, err
@@ -55,7 +55,7 @@ func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (in
 		_ = tx.Rollback()
 	}()
 
-	var userID int
+	var userID int64
 	err = tx.QueryRowContext(ctx, _sqlCreateUser, login, password).Scan(&userID)
 	if err != nil {
 		var pqErr *pq.Error
@@ -73,8 +73,8 @@ func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (in
 	return userID, tx.Commit()
 }
 
-func (pg *PgStorage) FindUser(ctx context.Context, login string) (int, string, error) {
-	var userID int
+func (pg *PgStorage) FindUser(ctx context.Context, login string) (int64, string, error) {
+	var userID int64
 	var userPassword string
 	err := pg.db.QueryRowContext(ctx, _sqlFindUser, login).Scan(&userID, &userPassword)
 	switch {
