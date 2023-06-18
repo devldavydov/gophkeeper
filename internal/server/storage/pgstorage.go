@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/devldavydov/gophkeeper/internal/common/model"
 	"github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 )
@@ -15,11 +16,13 @@ const (
 
 	_constraintUniqueViolation pq.ErrorCode = "23505"
 	_constraintUsernameCheck   string       = "users_username_key"
+	_constraintSecretCheck     string       = "secrets_pkey"
 )
 
 var (
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrUserNotFound      = errors.New("user not found")
+	ErrUserAlreadyExists   = errors.New("user already exists")
+	ErrUserNotFound        = errors.New("user not found")
+	ErrSecretAlreadyExists = errors.New("secret already exists")
 )
 
 // PgStorage is a Storage implementation for PostgreSQL database.
@@ -87,6 +90,33 @@ func (pg *PgStorage) FindUser(ctx context.Context, login string) (int64, string,
 	return userID, userPassword, nil
 }
 
+func (pg *PgStorage) CreateSecret(ctx context.Context, userID int64, secret model.Secret) error {
+	_, err := pg.db.ExecContext(
+		ctx,
+		_sqlCreateSecret,
+		userID,
+		secret.Type,
+		secret.Name,
+		secret.Meta,
+		secret.Version,
+		secret.PayloadRaw,
+	)
+	if err != nil {
+		var pqErr *pq.Error
+		if !errors.As(err, &pqErr) {
+			return err
+		}
+
+		if pqErr.Code == _constraintUniqueViolation && pqErr.Constraint == _constraintSecretCheck {
+			return ErrSecretAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
+}
+
 func (pg *PgStorage) Ping(ctx context.Context) bool {
 	if err := pg.db.PingContext(ctx); err != nil {
 		pg.logger.Errorf("Failed to ping database, err: %v", err)
@@ -111,7 +141,7 @@ func (pg *PgStorage) init() error {
 	ctx, cancel := context.WithTimeout(context.Background(), _databaseInitTimeout)
 	defer cancel()
 
-	for _, createTbl := range []string{_sqlCreateTableUser} {
+	for _, createTbl := range []string{_sqlCreateTableUser, _sqlCreateTableSecret} {
 		_, err := pg.db.ExecContext(ctx, createTbl)
 		if err != nil {
 			return err
