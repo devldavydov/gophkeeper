@@ -59,4 +59,14 @@ const (
 	_sqlDeleteAllSecrets = `
 		DELETE FROM secrets
 		`
+	_sqlLockSecret = `
+		SELECT version FROM secrets
+		WHERE user_id = $1 AND name = $2
+		FOR UPDATE;
+		`
+	_sqlUpdateSecret = `
+		UPDATE secrets
+		SET meta = $3, version = $4, payload_raw = $5
+		WHERE user_id = $1 AND name = $2;
+		`
 )

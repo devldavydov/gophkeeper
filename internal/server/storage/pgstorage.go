@@ -25,6 +25,7 @@ var (
 	ErrSecretAlreadyExists = errors.New("secret already exists")
 	ErrSecretNotFound      = errors.New("secret not found")
 	ErrNoSecrets           = errors.New("no secrets")
+	ErrSecretOutdated      = errors.New("secret outdated")
 )
 
 // PgStorage is a Storage implementation for PostgreSQL database.
@@ -166,7 +167,36 @@ func (pg *PgStorage) DeleteAllSecrets(ctx context.Context) error {
 }
 
 func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string, update *model.SecretUpdate) error {
-	return nil
+	tx, err := pg.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	// Lock current secret
+	var curVersion int64
+	err = tx.QueryRowContext(ctx, _sqlLockSecret, userID, name).Scan(&curVersion)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return ErrSecretNotFound
+	case err != nil:
+		return err
+	}
+
+	// Check version
+	if curVersion > update.Version {
+		return ErrSecretOutdated
+	}
+
+	// Update
+	_, err = tx.ExecContext(ctx, _sqlUpdateSecret, userID, name, update.Meta, update.Version, update.PayloadRaw)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (pg *PgStorage) Ping(ctx context.Context) bool {
