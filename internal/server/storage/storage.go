@@ -12,7 +12,12 @@ type Storage interface {
 	CreateUser(ctx context.Context, login, password string) (int64, error)
 	FindUser(ctx context.Context, login string) (int64, string, error)
 
-	CreateSecret(ctx context.Context, userID int64, secret model.Secret) error
+	CreateSecret(ctx context.Context, userID int64, secret *model.Secret) error
+	GetSecret(ctx context.Context, userID int64, name string) (*model.Secret, error)
+	GetAllSecrets(ctx context.Context, userID int64) ([]model.SecretInfo, error)
+	DeleteSecret(ctx context.Context, userID int64, name string) error
+	DeleteAllSecrets(ctx context.Context) error
+	UpdateSecret(ctx context.Context, userID int64, name string, update *model.SecretUpdate) error
 
 	Ping(ctx context.Context) bool
 	Close()

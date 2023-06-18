@@ -50,6 +50,20 @@ type Secret struct {
 	PayloadRaw []byte
 }
 
+// SecretInfo represents short information about Secret. Used in list of secrets.
+type SecretInfo struct {
+	Type    SecretType
+	Name    string
+	Version int64
+}
+
+// SecretInfo represents Secret fields to update.
+type SecretUpdate struct {
+	Meta       string
+	Version    int64
+	PayloadRaw []byte
+}
+
 // GetPayload returns Payload from binary raw.
 func (s *Secret) GetPayload() (Payload, error) {
 	var decObj msgp.Decodable

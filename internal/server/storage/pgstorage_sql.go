@@ -41,4 +41,22 @@ const (
 		INSERT INTO secrets (user_id, type, name, meta, version, payload_raw)
 		VALUES ($1, $2, $3, $4, $5, $6);
 		`
+	_sqlGetSecret = `
+		SELECT type, name, meta, version, payload_raw
+		FROM secrets
+		WHERE user_id = $1 AND name = $2;
+		`
+	_sqlGetAllSecrets = `
+		SELECT type, name, version
+		FROM secrets
+		WHERE user_id = $1
+		ORDER BY name;
+		`
+	_sqlDeleteSecret = `
+		DELETE FROM secrets
+		WHERE user_id = $1 AND name = $2;
+		`
+	_sqlDeleteAllSecrets = `
+		DELETE FROM secrets
+		`
 )

@@ -23,6 +23,8 @@ var (
 	ErrUserAlreadyExists   = errors.New("user already exists")
 	ErrUserNotFound        = errors.New("user not found")
 	ErrSecretAlreadyExists = errors.New("secret already exists")
+	ErrSecretNotFound      = errors.New("secret not found")
+	ErrNoSecrets           = errors.New("no secrets")
 )
 
 // PgStorage is a Storage implementation for PostgreSQL database.
@@ -50,16 +52,8 @@ func NewPgStorage(pgConnString string, logger *logrus.Logger) (*PgStorage, error
 var _ Storage = (*PgStorage)(nil)
 
 func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (int64, error) {
-	tx, err := pg.db.Begin()
-	if err != nil {
-		return 0, err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-
 	var userID int64
-	err = tx.QueryRowContext(ctx, _sqlCreateUser, login, password).Scan(&userID)
+	err := pg.db.QueryRowContext(ctx, _sqlCreateUser, login, password).Scan(&userID)
 	if err != nil {
 		var pqErr *pq.Error
 		if !errors.As(err, &pqErr) {
@@ -73,7 +67,7 @@ func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (in
 		return 0, err
 	}
 
-	return userID, tx.Commit()
+	return userID, nil
 }
 
 func (pg *PgStorage) FindUser(ctx context.Context, login string) (int64, string, error) {
@@ -90,7 +84,7 @@ func (pg *PgStorage) FindUser(ctx context.Context, login string) (int64, string,
 	return userID, userPassword, nil
 }
 
-func (pg *PgStorage) CreateSecret(ctx context.Context, userID int64, secret model.Secret) error {
+func (pg *PgStorage) CreateSecret(ctx context.Context, userID int64, secret *model.Secret) error {
 	_, err := pg.db.ExecContext(
 		ctx,
 		_sqlCreateSecret,
@@ -114,6 +108,64 @@ func (pg *PgStorage) CreateSecret(ctx context.Context, userID int64, secret mode
 		return err
 	}
 
+	return nil
+}
+
+func (pg *PgStorage) GetSecret(ctx context.Context, userID int64, name string) (*model.Secret, error) {
+	secret := &model.Secret{}
+	err := pg.db.
+		QueryRowContext(ctx, _sqlGetSecret, userID, name).
+		Scan(&secret.Type, &secret.Name, &secret.Meta, &secret.Version, &secret.PayloadRaw)
+	switch {
+	case err == sql.ErrNoRows:
+		return nil, ErrSecretNotFound
+	case err != nil:
+		return nil, err
+	}
+
+	return secret, nil
+}
+
+func (pg *PgStorage) GetAllSecrets(ctx context.Context, userID int64) ([]model.SecretInfo, error) {
+	rows, err := pg.db.QueryContext(ctx, _sqlGetAllSecrets, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []model.SecretInfo
+
+	for rows.Next() {
+		secretItem := model.SecretInfo{}
+		err = rows.Scan(&secretItem.Type, &secretItem.Name, &secretItem.Version)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, secretItem)
+	}
+
+	if len(items) == 0 {
+		return nil, ErrNoSecrets
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func (pg *PgStorage) DeleteSecret(ctx context.Context, userID int64, name string) error {
+	_, err := pg.db.ExecContext(ctx, _sqlDeleteSecret, userID, name)
+	return err
+}
+
+func (pg *PgStorage) DeleteAllSecrets(ctx context.Context) error {
+	_, err := pg.db.ExecContext(ctx, _sqlDeleteAllSecrets)
+	return err
+}
+
+func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string, update *model.SecretUpdate) error {
 	return nil
 }
 

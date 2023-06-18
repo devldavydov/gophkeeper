@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/devldavydov/gophkeeper/internal/common/model"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -85,9 +86,171 @@ func (pg *PgStorageSuite) TestFindUser() {
 	})
 }
 
+func (pg *PgStorageSuite) TestCreateSecret() {
+	var userID int64
+	var err error
+
+	userName, userPassword := uuid.NewString(), uuid.NewString()
+	secretName := uuid.NewString()
+	ctx, cancel := context.WithTimeout(context.Background(), _testDBTimeout)
+	defer cancel()
+
+	pg.Run("create user", func() {
+		userID, err = pg.stg.CreateUser(ctx, userName, userPassword)
+		pg.NoError(err)
+	})
+
+	secret := &model.Secret{
+		Type:       model.CredsSecret,
+		Name:       secretName,
+		Meta:       "test descr",
+		Version:    1,
+		PayloadRaw: []byte("test byte data"),
+	}
+
+	pg.Run("create secret", func() {
+		err = pg.stg.CreateSecret(ctx, userID, secret)
+		pg.NoError(err)
+	})
+
+	pg.Run("create secret twice", func() {
+		err = pg.stg.CreateSecret(ctx, userID, secret)
+		pg.ErrorIs(err, ErrSecretAlreadyExists)
+	})
+}
+
+func (pg *PgStorageSuite) TestGetSecret() {
+	var userID int64
+	var err error
+
+	userName, userPassword := uuid.NewString(), uuid.NewString()
+	secretName := uuid.NewString()
+	ctx, cancel := context.WithTimeout(context.Background(), _testDBTimeout)
+	defer cancel()
+
+	pg.Run("create user", func() {
+		userID, err = pg.stg.CreateUser(ctx, userName, userPassword)
+		pg.NoError(err)
+	})
+
+	pg.Run("get not exists secret", func() {
+		_, err = pg.stg.GetSecret(ctx, userID, secretName)
+		pg.ErrorIs(err, ErrSecretNotFound)
+	})
+
+	expSecret := &model.Secret{
+		Type:       model.CredsSecret,
+		Name:       secretName,
+		Meta:       "test descr",
+		Version:    1,
+		PayloadRaw: []byte("test byte data"),
+	}
+
+	pg.Run("create secret", func() {
+		err = pg.stg.CreateSecret(ctx, userID, expSecret)
+		pg.NoError(err)
+	})
+
+	pg.Run("get secret", func() {
+		var secret *model.Secret
+		secret, err = pg.stg.GetSecret(ctx, userID, secretName)
+		pg.NoError(err)
+		pg.Equal(expSecret, secret)
+	})
+}
+
+func (pg *PgStorageSuite) TestGetAllSecrets() {
+	var userID int64
+	var err error
+
+	userName, userPassword := uuid.NewString(), uuid.NewString()
+	secretName1, secretName2 := "b"+uuid.NewString(), "a"+uuid.NewString()
+	ctx, cancel := context.WithTimeout(context.Background(), _testDBTimeout)
+	defer cancel()
+
+	pg.Run("create user", func() {
+		userID, err = pg.stg.CreateUser(ctx, userName, userPassword)
+		pg.NoError(err)
+	})
+
+	pg.Run("clear all secrets", func() {
+		pg.NoError(pg.stg.DeleteAllSecrets(ctx))
+	})
+
+	pg.Run("get all secrets - no secrets", func() {
+		_, err = pg.stg.GetAllSecrets(ctx, userID)
+		pg.ErrorIs(err, ErrNoSecrets)
+	})
+
+	pg.Run("create secrets", func() {
+		for _, name := range []string{secretName1, secretName2} {
+			pg.NoError(
+				pg.stg.CreateSecret(ctx, userID, &model.Secret{
+					Type:       model.CredsSecret,
+					Name:       name,
+					Meta:       "test",
+					Version:    1,
+					PayloadRaw: []byte("123"),
+				}))
+		}
+	})
+
+	pg.Run("get all secrets", func() {
+		var lst []model.SecretInfo
+		lst, err = pg.stg.GetAllSecrets(ctx, userID)
+		pg.Equal(2, len(lst))
+		pg.Equal(secretName2, lst[0].Name)
+		pg.Equal(secretName1, lst[1].Name)
+	})
+}
+
+func (pg *PgStorageSuite) TestDeleteSecret() {
+	var userID int64
+	var err error
+
+	userName, userPassword := uuid.NewString(), uuid.NewString()
+	secretName := uuid.NewString()
+	ctx, cancel := context.WithTimeout(context.Background(), _testDBTimeout)
+	defer cancel()
+
+	pg.Run("create user", func() {
+		userID, err = pg.stg.CreateUser(ctx, userName, userPassword)
+		pg.NoError(err)
+	})
+
+	expSecret := &model.Secret{
+		Type:       model.CredsSecret,
+		Name:       secretName,
+		Meta:       "test descr",
+		Version:    1,
+		PayloadRaw: []byte("test byte data"),
+	}
+
+	pg.Run("create secret", func() {
+		err = pg.stg.CreateSecret(ctx, userID, expSecret)
+		pg.NoError(err)
+	})
+
+	pg.Run("get secret", func() {
+		var secret *model.Secret
+		secret, err = pg.stg.GetSecret(ctx, userID, secretName)
+		pg.NoError(err)
+		pg.Equal(expSecret, secret)
+	})
+
+	pg.Run("delete secret", func() {
+		pg.NoError(pg.stg.DeleteSecret(ctx, userID, secretName))
+	})
+
+	pg.Run("get not exists secret", func() {
+		_, err = pg.stg.GetSecret(ctx, userID, secretName)
+		pg.ErrorIs(err, ErrSecretNotFound)
+	})
+}
+
 func TestPgStorageSuite(t *testing.T) {
 	// TODO: REMOVE AFTER ALL TESTS
-	// t.Setenv(_envTestDatabaseDsn, "postgres://postgres:postgres@127.0.0.1:5432/praktikum?sslmode=disable")
+	t.Setenv(_envTestDatabaseDsn, "postgres://postgres:postgres@127.0.0.1:5432/praktikum?sslmode=disable")
 	//
 	_, ok := os.LookupEnv(_envTestDatabaseDsn)
 	if !ok {
