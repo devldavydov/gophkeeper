@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/caarlos0/env/v7"
+	"github.com/devldavydov/gophkeeper/internal/common/cipher"
 	"github.com/devldavydov/gophkeeper/internal/common/nettools"
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	"github.com/devldavydov/gophkeeper/internal/server"
@@ -21,7 +22,7 @@ const (
 	_defaultConfigGRPCServerTLSKey  = ""
 	_defaultConfigDatabaseDsn       = ""
 	_defaultConfigLogLevel          = "INFO"
-	_defaultConfigServerSecret      = "GophKeeper"
+	_defaultConfigServerSecret      = "GophKeeperSupaSecretKeyForCrypto" //nolint:gosec // OK
 	_defaultConfigShutdownTimeout   = 10 * time.Second
 )
 
@@ -78,6 +79,10 @@ func ServiceSettingsAdapt(config *Config) (*server.ServiceSettings, error) {
 	}
 
 	if config.DatabaseDsn == "" {
+		return nil, errInvalidSettings
+	}
+
+	if len(config.ServerSecret) != cipher.AESKeyLength {
 		return nil, errInvalidSettings
 	}
 

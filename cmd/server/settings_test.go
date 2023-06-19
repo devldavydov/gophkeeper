@@ -15,7 +15,7 @@ func TestServiceSettingsAdaptFromEnv(t *testing.T) {
 	t.Setenv("GRPC_SERVER_TLS_KEY", "/tmp/tls.key")
 	t.Setenv("DATABASE_DSN", "postgre:5432")
 	t.Setenv("LOG_LEVEL", "DEBUG")
-	t.Setenv("SERVER_SECRET", "secret")
+	t.Setenv("SERVER_SECRET", "asuperstrong32bitpasswordgohere!")
 	t.Setenv("SHUTDOWN_TIMEOUT", "1s")
 
 	testFlagSet := flag.NewFlagSet("test", flag.ExitOnError)
@@ -29,7 +29,7 @@ func TestServiceSettingsAdaptFromEnv(t *testing.T) {
 	assert.Equal(t, "/tmp/tls.cert", serviceSettings.GRPCServerTLS.ServerCertPath)
 	assert.Equal(t, "/tmp/tls.key", serviceSettings.GRPCServerTLS.ServerKeyPath)
 	assert.Equal(t, "postgre:5432", serviceSettings.DatabaseDsn)
-	assert.Equal(t, "secret", serviceSettings.ServerSecret)
+	assert.Equal(t, "asuperstrong32bitpasswordgohere!", serviceSettings.ServerSecret)
 	assert.Equal(t, 1*time.Second, serviceSettings.ShutdownTimeout)
 }
 
@@ -41,7 +41,7 @@ func TestServiceSettingsAdaptFromFlag(t *testing.T) {
 		"-tlskey", "/tmp/tls.key",
 		"-d", "postgre:5432",
 		"-l", "DEBUG",
-		"-s", "secret",
+		"-s", "asuperstrong32bitpasswordgohere!",
 		"-t", "1s",
 	})
 	assert.NoError(t, err)
@@ -53,7 +53,7 @@ func TestServiceSettingsAdaptFromFlag(t *testing.T) {
 	assert.Equal(t, "/tmp/tls.cert", serviceSettings.GRPCServerTLS.ServerCertPath)
 	assert.Equal(t, "/tmp/tls.key", serviceSettings.GRPCServerTLS.ServerKeyPath)
 	assert.Equal(t, "postgre:5432", serviceSettings.DatabaseDsn)
-	assert.Equal(t, "secret", serviceSettings.ServerSecret)
+	assert.Equal(t, "asuperstrong32bitpasswordgohere!", serviceSettings.ServerSecret)
 	assert.Equal(t, 1*time.Second, serviceSettings.ShutdownTimeout)
 }
 
@@ -73,7 +73,7 @@ func TestServiceSettingsAdaptWithDefault(t *testing.T) {
 	assert.Equal(t, "/tmp/tls.cert", serviceSettings.GRPCServerTLS.ServerCertPath)
 	assert.Equal(t, "/tmp/tls.key", serviceSettings.GRPCServerTLS.ServerKeyPath)
 	assert.Equal(t, "postgre:5432", serviceSettings.DatabaseDsn)
-	assert.Equal(t, "GophKeeper", serviceSettings.ServerSecret)
+	assert.Equal(t, "GophKeeperSupaSecretKeyForCrypto", serviceSettings.ServerSecret)
 	assert.Equal(t, 10*time.Second, serviceSettings.ShutdownTimeout)
 }
 
@@ -85,6 +85,7 @@ func TestServiceSettingsAdaptError(t *testing.T) {
 	}{
 		{flags: []string{}, env: map[string]string{}},
 		{flags: []string{"-a", ""}, env: map[string]string{}},
+		{flags: []string{"-s", "123"}, env: map[string]string{}},
 		{
 			flags: []string{"-d", "", "-tlscert", "/tmp/tls.cert", "-tlskey", "/tmp/tls.key"},
 			env:   map[string]string{},
