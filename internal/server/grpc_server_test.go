@@ -164,6 +164,7 @@ func (gs *GrpcServerSuite) TestSecretGetCreate() {
 	defer cancel()
 
 	token := gs.createTestUser(ctx)
+	secretName := uuid.NewString()
 
 	gs.Run("get not exists", func() {
 		_, err := gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: "123"})
@@ -179,7 +180,7 @@ func (gs *GrpcServerSuite) TestSecretGetCreate() {
 
 	secret := &pb.Secret{
 		Type:       pb.SecretType_CREDS,
-		Name:       "test",
+		Name:       secretName,
 		Meta:       "meta",
 		Version:    1,
 		PayloadRaw: payloadRaw,
@@ -236,6 +237,90 @@ func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
 			gs.Equal(codes.InvalidArgument, status.Code())
 		})
 	}
+}
+
+func (gs *GrpcServerSuite) TestSecretUpdateNotExists() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	token := gs.createTestUser(ctx)
+
+	gs.Run("update secret not exists", func() {
+		_, err := gs.testClt.SecretUpdate(contextWithToken(ctx, token), &pb.SecretUpdateRequest{Name: "123"})
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.NotFound, status.Code())
+	})
+}
+
+func (gs *GrpcServerSuite) TestSecretUpdate() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	token := gs.createTestUser(ctx)
+	secretName := uuid.NewString()
+
+	// Create secret
+	credsPayload := model.NewCredsPayload("foo", "bar")
+	payloadRaw, err := gkMsgp.Serialize(credsPayload)
+	gs.NoError(err)
+
+	secret := &pb.Secret{
+		Type:       pb.SecretType_CREDS,
+		Name:       secretName,
+		Meta:       "meta",
+		Version:    1,
+		PayloadRaw: payloadRaw,
+	}
+
+	gs.Run("create secret", func() {
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
+		gs.NoError(err)
+	})
+
+	// Update secret
+	updCredsPayload := model.NewCredsPayload("fuzz", "buzz")
+	updPayloadRaw, err := gkMsgp.Serialize(updCredsPayload)
+	gs.NoError(err)
+
+	updRequest := &pb.SecretUpdateRequest{
+		Name:       secretName,
+		Version:    2,
+		Meta:       "new meta",
+		PayloadRaw: updPayloadRaw,
+	}
+
+	gs.Run("update secret", func() {
+		_, err = gs.testClt.SecretUpdate(contextWithToken(ctx, token), updRequest)
+		gs.NoError(err)
+	})
+
+	// Check after update
+	gs.Run("get updated", func() {
+		var resSecret *pb.Secret
+		resSecret, err = gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: secretName})
+		gs.NoError(err)
+
+		gs.Equal(resSecret.Name, secretName)
+		gs.Equal(resSecret.Type, secret.Type)
+		gs.Equal(resSecret.Meta, updRequest.Meta)
+		gs.Equal(resSecret.Version, updRequest.Version)
+
+		resPayload := &model.CredsPayload{}
+		gs.NoError(gkMsgp.Deserialize(resSecret.PayloadRaw, resPayload))
+		gs.Equal(updCredsPayload, resPayload)
+	})
+
+	// Update with outdated version
+	updRequest.Version = 1
+	gs.Run("update outdated secret", func() {
+		_, err = gs.testClt.SecretUpdate(contextWithToken(ctx, token), updRequest)
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.FailedPrecondition, status.Code())
+	})
 }
 
 func (gs *GrpcServerSuite) TestSecretDelete() {

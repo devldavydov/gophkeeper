@@ -44,6 +44,8 @@ const (
 	_msgSecretAlreadyExists  = "secret already exists"
 	_msgSecretNotFound       = "secret not found"
 	_msgSecretFailedToDelete = "failed to delete secret"
+	_msgSecretFailedToUpdate = "failed to update secret"
+	_msgSecretOutdated       = "secret outdated"
 )
 
 // GrpcServer represents gRPC server.
@@ -250,7 +252,44 @@ func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateReques
 }
 
 func (g *GrpcServer) SecretUpdate(ctx context.Context, in *pb.SecretUpdateRequest) (*pb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SecretUpdate not implemented")
+	userID, err := g.getUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Encrypt payload
+	encPayload, err := cipher.AESEncrpyt(in.PayloadRaw, g.serverSecret)
+	if err != nil {
+		g.logger.Errorf("[user=%d] secret [%s] update error: encrypt payload error: %v", userID, in.Name, err)
+		return nil, status.Error(codes.Internal, _msgSecretFailedToUpdate)
+	}
+
+	// Update secret
+	updSecret := &model.SecretUpdate{
+		Meta:       in.Meta,
+		Version:    in.Version,
+		PayloadRaw: encPayload,
+	}
+	err = g.stg.UpdateSecret(ctx, userID, in.Name, updSecret)
+	if err != nil {
+		var errStatus error
+
+		switch {
+		case errors.Is(err, storage.ErrSecretNotFound):
+			g.logger.Errorf("[user=%d] secret [%s] update error: not found", userID, in.Name)
+			return nil, status.Error(codes.NotFound, _msgSecretNotFound)
+		case errors.Is(err, storage.ErrSecretOutdated):
+			g.logger.Errorf("[user=%d] secret [%s] update error: secret outdated", userID, in.Name)
+			return nil, status.Error(codes.FailedPrecondition, _msgSecretOutdated)
+		default:
+			g.logger.Errorf("[user=%d] secret [%s] update error: %v", userID, in.Name, err)
+			errStatus = status.Error(codes.Internal, _msgSecretFailedToUpdate)
+		}
+
+		return nil, errStatus
+	}
+
+	return &pb.Empty{}, nil
 }
 func (g *GrpcServer) SecretDelete(ctx context.Context, in *pb.SecretDeleteRequest) (*pb.Empty, error) {
 	userID, err := g.getUserIDFromContext(ctx)
