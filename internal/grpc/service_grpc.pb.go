@@ -37,11 +37,11 @@ type GophKeeperServiceClient interface {
 	UserCreate(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserAuthToken, error)
 	UserLogin(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserAuthToken, error)
 	// Secret
-	SecretGetList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SecretList, error)
-	SecretGet(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Secret, error)
-	SecretCreate(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error)
-	SecretUpdate(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error)
-	SecretDelete(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error)
+	SecretGetList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SecretGetListResponse, error)
+	SecretGet(ctx context.Context, in *SecretGetRequest, opts ...grpc.CallOption) (*Secret, error)
+	SecretCreate(ctx context.Context, in *SecretCreateRequest, opts ...grpc.CallOption) (*Empty, error)
+	SecretUpdate(ctx context.Context, in *SecretUpdateRequest, opts ...grpc.CallOption) (*Empty, error)
+	SecretDelete(ctx context.Context, in *SecretDeleteRequest, opts ...grpc.CallOption) (*Empty, error)
 	// Other
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 }
@@ -72,8 +72,8 @@ func (c *gophKeeperServiceClient) UserLogin(ctx context.Context, in *User, opts 
 	return out, nil
 }
 
-func (c *gophKeeperServiceClient) SecretGetList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SecretList, error) {
-	out := new(SecretList)
+func (c *gophKeeperServiceClient) SecretGetList(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SecretGetListResponse, error) {
+	out := new(SecretGetListResponse)
 	err := c.cc.Invoke(ctx, GophKeeperService_SecretGetList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (c *gophKeeperServiceClient) SecretGetList(ctx context.Context, in *Empty, 
 	return out, nil
 }
 
-func (c *gophKeeperServiceClient) SecretGet(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Secret, error) {
+func (c *gophKeeperServiceClient) SecretGet(ctx context.Context, in *SecretGetRequest, opts ...grpc.CallOption) (*Secret, error) {
 	out := new(Secret)
 	err := c.cc.Invoke(ctx, GophKeeperService_SecretGet_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -90,7 +90,7 @@ func (c *gophKeeperServiceClient) SecretGet(ctx context.Context, in *Secret, opt
 	return out, nil
 }
 
-func (c *gophKeeperServiceClient) SecretCreate(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gophKeeperServiceClient) SecretCreate(ctx context.Context, in *SecretCreateRequest, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, GophKeeperService_SecretCreate_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -99,7 +99,7 @@ func (c *gophKeeperServiceClient) SecretCreate(ctx context.Context, in *Secret, 
 	return out, nil
 }
 
-func (c *gophKeeperServiceClient) SecretUpdate(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gophKeeperServiceClient) SecretUpdate(ctx context.Context, in *SecretUpdateRequest, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, GophKeeperService_SecretUpdate_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -108,7 +108,7 @@ func (c *gophKeeperServiceClient) SecretUpdate(ctx context.Context, in *Secret, 
 	return out, nil
 }
 
-func (c *gophKeeperServiceClient) SecretDelete(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gophKeeperServiceClient) SecretDelete(ctx context.Context, in *SecretDeleteRequest, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, GophKeeperService_SecretDelete_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -134,11 +134,11 @@ type GophKeeperServiceServer interface {
 	UserCreate(context.Context, *User) (*UserAuthToken, error)
 	UserLogin(context.Context, *User) (*UserAuthToken, error)
 	// Secret
-	SecretGetList(context.Context, *Empty) (*SecretList, error)
-	SecretGet(context.Context, *Secret) (*Secret, error)
-	SecretCreate(context.Context, *Secret) (*Empty, error)
-	SecretUpdate(context.Context, *Secret) (*Empty, error)
-	SecretDelete(context.Context, *Secret) (*Empty, error)
+	SecretGetList(context.Context, *Empty) (*SecretGetListResponse, error)
+	SecretGet(context.Context, *SecretGetRequest) (*Secret, error)
+	SecretCreate(context.Context, *SecretCreateRequest) (*Empty, error)
+	SecretUpdate(context.Context, *SecretUpdateRequest) (*Empty, error)
+	SecretDelete(context.Context, *SecretDeleteRequest) (*Empty, error)
 	// Other
 	Ping(context.Context, *Empty) (*Empty, error)
 	mustEmbedUnimplementedGophKeeperServiceServer()
@@ -154,19 +154,19 @@ func (UnimplementedGophKeeperServiceServer) UserCreate(context.Context, *User) (
 func (UnimplementedGophKeeperServiceServer) UserLogin(context.Context, *User) (*UserAuthToken, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
 }
-func (UnimplementedGophKeeperServiceServer) SecretGetList(context.Context, *Empty) (*SecretList, error) {
+func (UnimplementedGophKeeperServiceServer) SecretGetList(context.Context, *Empty) (*SecretGetListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SecretGetList not implemented")
 }
-func (UnimplementedGophKeeperServiceServer) SecretGet(context.Context, *Secret) (*Secret, error) {
+func (UnimplementedGophKeeperServiceServer) SecretGet(context.Context, *SecretGetRequest) (*Secret, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SecretGet not implemented")
 }
-func (UnimplementedGophKeeperServiceServer) SecretCreate(context.Context, *Secret) (*Empty, error) {
+func (UnimplementedGophKeeperServiceServer) SecretCreate(context.Context, *SecretCreateRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SecretCreate not implemented")
 }
-func (UnimplementedGophKeeperServiceServer) SecretUpdate(context.Context, *Secret) (*Empty, error) {
+func (UnimplementedGophKeeperServiceServer) SecretUpdate(context.Context, *SecretUpdateRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SecretUpdate not implemented")
 }
-func (UnimplementedGophKeeperServiceServer) SecretDelete(context.Context, *Secret) (*Empty, error) {
+func (UnimplementedGophKeeperServiceServer) SecretDelete(context.Context, *SecretDeleteRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SecretDelete not implemented")
 }
 func (UnimplementedGophKeeperServiceServer) Ping(context.Context, *Empty) (*Empty, error) {
@@ -240,7 +240,7 @@ func _GophKeeperService_SecretGetList_Handler(srv interface{}, ctx context.Conte
 }
 
 func _GophKeeperService_SecretGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Secret)
+	in := new(SecretGetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -252,13 +252,13 @@ func _GophKeeperService_SecretGet_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: GophKeeperService_SecretGet_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServiceServer).SecretGet(ctx, req.(*Secret))
+		return srv.(GophKeeperServiceServer).SecretGet(ctx, req.(*SecretGetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GophKeeperService_SecretCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Secret)
+	in := new(SecretCreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -270,13 +270,13 @@ func _GophKeeperService_SecretCreate_Handler(srv interface{}, ctx context.Contex
 		FullMethod: GophKeeperService_SecretCreate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServiceServer).SecretCreate(ctx, req.(*Secret))
+		return srv.(GophKeeperServiceServer).SecretCreate(ctx, req.(*SecretCreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GophKeeperService_SecretUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Secret)
+	in := new(SecretUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -288,13 +288,13 @@ func _GophKeeperService_SecretUpdate_Handler(srv interface{}, ctx context.Contex
 		FullMethod: GophKeeperService_SecretUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServiceServer).SecretUpdate(ctx, req.(*Secret))
+		return srv.(GophKeeperServiceServer).SecretUpdate(ctx, req.(*SecretUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GophKeeperService_SecretDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Secret)
+	in := new(SecretDeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func _GophKeeperService_SecretDelete_Handler(srv interface{}, ctx context.Contex
 		FullMethod: GophKeeperService_SecretDelete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServiceServer).SecretDelete(ctx, req.(*Secret))
+		return srv.(GophKeeperServiceServer).SecretDelete(ctx, req.(*SecretDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

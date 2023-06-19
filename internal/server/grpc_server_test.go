@@ -143,7 +143,7 @@ func (gs *GrpcServerSuite) TestSecretGetList() {
 				Name: secretName, Type: pb.SecretType_CREDS, Version: 1, Meta: "", PayloadRaw: []byte("test"),
 			}
 
-			_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), secret)
+			_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
 			gs.NoError(err)
 		}
 	})
@@ -174,7 +174,7 @@ func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
 	} {
 		tt := tt
 		gs.Run(tt.name, func() {
-			_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), tt.secret)
+			_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: tt.secret})
 			gs.Error(err)
 			status, ok := status.FromError(err)
 			gs.True(ok)
@@ -202,12 +202,12 @@ func (gs *GrpcServerSuite) TestSecretCreateSuccessful() {
 	}
 
 	gs.Run("create secret", func() {
-		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), secret)
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
 		gs.NoError(err)
 	})
 
 	gs.Run("create secret already exists", func() {
-		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), secret)
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
 		gs.Error(err)
 		status, ok := status.FromError(err)
 		gs.True(ok)

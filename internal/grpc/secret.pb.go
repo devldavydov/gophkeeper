@@ -214,7 +214,7 @@ func (x *SecretListItem) GetVersion() int64 {
 	return 0
 }
 
-type SecretList struct {
+type SecretGetListResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -222,8 +222,8 @@ type SecretList struct {
 	Items []*SecretListItem `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 }
 
-func (x *SecretList) Reset() {
-	*x = SecretList{}
+func (x *SecretGetListResponse) Reset() {
+	*x = SecretGetListResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_internal_grpc_proto_secret_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -231,13 +231,13 @@ func (x *SecretList) Reset() {
 	}
 }
 
-func (x *SecretList) String() string {
+func (x *SecretGetListResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SecretList) ProtoMessage() {}
+func (*SecretGetListResponse) ProtoMessage() {}
 
-func (x *SecretList) ProtoReflect() protoreflect.Message {
+func (x *SecretGetListResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_internal_grpc_proto_secret_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -249,16 +249,186 @@ func (x *SecretList) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SecretList.ProtoReflect.Descriptor instead.
-func (*SecretList) Descriptor() ([]byte, []int) {
+// Deprecated: Use SecretGetListResponse.ProtoReflect.Descriptor instead.
+func (*SecretGetListResponse) Descriptor() ([]byte, []int) {
 	return file_internal_grpc_proto_secret_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *SecretList) GetItems() []*SecretListItem {
+func (x *SecretGetListResponse) GetItems() []*SecretListItem {
 	if x != nil {
 		return x.Items
 	}
 	return nil
+}
+
+type SecretGetRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+}
+
+func (x *SecretGetRequest) Reset() {
+	*x = SecretGetRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpc_proto_secret_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SecretGetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretGetRequest) ProtoMessage() {}
+
+func (x *SecretGetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpc_proto_secret_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretGetRequest.ProtoReflect.Descriptor instead.
+func (*SecretGetRequest) Descriptor() ([]byte, []int) {
+	return file_internal_grpc_proto_secret_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SecretGetRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type SecretCreateRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Secret *Secret `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
+}
+
+func (x *SecretCreateRequest) Reset() {
+	*x = SecretCreateRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpc_proto_secret_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SecretCreateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretCreateRequest) ProtoMessage() {}
+
+func (x *SecretCreateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpc_proto_secret_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretCreateRequest.ProtoReflect.Descriptor instead.
+func (*SecretCreateRequest) Descriptor() ([]byte, []int) {
+	return file_internal_grpc_proto_secret_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SecretCreateRequest) GetSecret() *Secret {
+	if x != nil {
+		return x.Secret
+	}
+	return nil
+}
+
+type SecretUpdateRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SecretUpdateRequest) Reset() {
+	*x = SecretUpdateRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpc_proto_secret_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SecretUpdateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretUpdateRequest) ProtoMessage() {}
+
+func (x *SecretUpdateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpc_proto_secret_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretUpdateRequest.ProtoReflect.Descriptor instead.
+func (*SecretUpdateRequest) Descriptor() ([]byte, []int) {
+	return file_internal_grpc_proto_secret_proto_rawDescGZIP(), []int{5}
+}
+
+type SecretDeleteRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SecretDeleteRequest) Reset() {
+	*x = SecretDeleteRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_internal_grpc_proto_secret_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SecretDeleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretDeleteRequest) ProtoMessage() {}
+
+func (x *SecretDeleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_grpc_proto_secret_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretDeleteRequest.ProtoReflect.Descriptor instead.
+func (*SecretDeleteRequest) Descriptor() ([]byte, []int) {
+	return file_internal_grpc_proto_secret_proto_rawDescGZIP(), []int{6}
 }
 
 var File_internal_grpc_proto_secret_proto protoreflect.FileDescriptor
@@ -282,16 +452,25 @@ var file_internal_grpc_proto_secret_proto_rawDesc = []byte{
 	0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74,
 	0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65,
 	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x76, 0x65, 0x72,
-	0x73, 0x69, 0x6f, 0x6e, 0x22, 0x39, 0x0a, 0x0a, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4c, 0x69,
-	0x73, 0x74, 0x12, 0x2b, 0x0a, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74,
-	0x4c, 0x69, 0x73, 0x74, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x2a,
-	0x37, 0x0a, 0x0a, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x09, 0x0a,
-	0x05, 0x43, 0x52, 0x45, 0x44, 0x53, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x54, 0x45, 0x58, 0x54,
-	0x10, 0x01, 0x12, 0x0a, 0x0a, 0x06, 0x42, 0x49, 0x4e, 0x41, 0x52, 0x59, 0x10, 0x02, 0x12, 0x08,
-	0x0a, 0x04, 0x43, 0x41, 0x52, 0x44, 0x10, 0x03, 0x42, 0x0f, 0x5a, 0x0d, 0x69, 0x6e, 0x74, 0x65,
-	0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x73, 0x69, 0x6f, 0x6e, 0x22, 0x44, 0x0a, 0x15, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x47, 0x65,
+	0x74, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2b, 0x0a,
+	0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x49,
+	0x74, 0x65, 0x6d, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x22, 0x26, 0x0a, 0x10, 0x53, 0x65,
+	0x63, 0x72, 0x65, 0x74, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12,
+	0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61,
+	0x6d, 0x65, 0x22, 0x3c, 0x0a, 0x13, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x25, 0x0a, 0x06, 0x73, 0x65, 0x63,
+	0x72, 0x65, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x52, 0x06, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74,
+	0x22, 0x15, 0x0a, 0x13, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x15, 0x0a, 0x13, 0x53, 0x65, 0x63, 0x72, 0x65,
+	0x74, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2a, 0x37,
+	0x0a, 0x0a, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x09, 0x0a, 0x05,
+	0x43, 0x52, 0x45, 0x44, 0x53, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x54, 0x45, 0x58, 0x54, 0x10,
+	0x01, 0x12, 0x0a, 0x0a, 0x06, 0x42, 0x49, 0x4e, 0x41, 0x52, 0x59, 0x10, 0x02, 0x12, 0x08, 0x0a,
+	0x04, 0x43, 0x41, 0x52, 0x44, 0x10, 0x03, 0x42, 0x0f, 0x5a, 0x0d, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x6e, 0x61, 0x6c, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -307,22 +486,27 @@ func file_internal_grpc_proto_secret_proto_rawDescGZIP() []byte {
 }
 
 var file_internal_grpc_proto_secret_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_internal_grpc_proto_secret_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_internal_grpc_proto_secret_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_internal_grpc_proto_secret_proto_goTypes = []interface{}{
-	(SecretType)(0),        // 0: proto.SecretType
-	(*Secret)(nil),         // 1: proto.Secret
-	(*SecretListItem)(nil), // 2: proto.SecretListItem
-	(*SecretList)(nil),     // 3: proto.SecretList
+	(SecretType)(0),               // 0: proto.SecretType
+	(*Secret)(nil),                // 1: proto.Secret
+	(*SecretListItem)(nil),        // 2: proto.SecretListItem
+	(*SecretGetListResponse)(nil), // 3: proto.SecretGetListResponse
+	(*SecretGetRequest)(nil),      // 4: proto.SecretGetRequest
+	(*SecretCreateRequest)(nil),   // 5: proto.SecretCreateRequest
+	(*SecretUpdateRequest)(nil),   // 6: proto.SecretUpdateRequest
+	(*SecretDeleteRequest)(nil),   // 7: proto.SecretDeleteRequest
 }
 var file_internal_grpc_proto_secret_proto_depIdxs = []int32{
 	0, // 0: proto.Secret.type:type_name -> proto.SecretType
 	0, // 1: proto.SecretListItem.type:type_name -> proto.SecretType
-	2, // 2: proto.SecretList.items:type_name -> proto.SecretListItem
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	2, // 2: proto.SecretGetListResponse.items:type_name -> proto.SecretListItem
+	1, // 3: proto.SecretCreateRequest.secret:type_name -> proto.Secret
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_internal_grpc_proto_secret_proto_init() }
@@ -356,7 +540,55 @@ func file_internal_grpc_proto_secret_proto_init() {
 			}
 		}
 		file_internal_grpc_proto_secret_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SecretList); i {
+			switch v := v.(*SecretGetListResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpc_proto_secret_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SecretGetRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpc_proto_secret_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SecretCreateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpc_proto_secret_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SecretUpdateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_internal_grpc_proto_secret_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SecretDeleteRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -374,7 +606,7 @@ func file_internal_grpc_proto_secret_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_internal_grpc_proto_secret_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

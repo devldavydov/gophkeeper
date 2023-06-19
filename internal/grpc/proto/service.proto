@@ -14,11 +14,11 @@ service GophKeeperService {
   rpc UserCreate(User) returns (UserAuthToken);
   rpc UserLogin(User) returns (UserAuthToken);
   // Secret
-  rpc SecretGetList(Empty) returns (SecretList);
-  rpc SecretGet(Secret) returns (Secret);
-  rpc SecretCreate(Secret) returns (Empty);
-  rpc SecretUpdate(Secret) returns (Empty);
-  rpc SecretDelete(Secret) returns (Empty);
+  rpc SecretGetList(Empty) returns (SecretGetListResponse);
+  rpc SecretGet(SecretGetRequest) returns (Secret);
+  rpc SecretCreate(SecretCreateRequest) returns (Empty);
+  rpc SecretUpdate(SecretUpdateRequest) returns (Empty);
+  rpc SecretDelete(SecretDeleteRequest) returns (Empty);
   // Other
   rpc Ping(Empty) returns (Empty);
 }
