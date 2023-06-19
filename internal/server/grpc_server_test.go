@@ -125,7 +125,7 @@ func (gs *GrpcServerSuite) TestSecretGetList() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, _, token := gs.createTestUser(ctx)
+	token := gs.createTestUser(ctx)
 
 	gs.Run("get empty secret list", func() {
 		_, err := gs.testClt.SecretGetList(contextWithToken(ctx, token), &pb.Empty{})
@@ -159,11 +159,58 @@ func (gs *GrpcServerSuite) TestSecretGetList() {
 	})
 }
 
+func (gs *GrpcServerSuite) TestSecretGet() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	token := gs.createTestUser(ctx)
+
+	gs.Run("get not exists", func() {
+		_, err := gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: "123"})
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.NotFound, status.Code())
+	})
+
+	credsPayload := model.NewCredsPayload("foo", "bar")
+	payloadRaw, err := gkMsgp.Serialize(credsPayload)
+	gs.NoError(err)
+
+	secret := &pb.Secret{
+		Type:       pb.SecretType_CREDS,
+		Name:       "test",
+		Meta:       "meta",
+		Version:    1,
+		PayloadRaw: payloadRaw,
+	}
+
+	gs.Run("create secret", func() {
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
+		gs.NoError(err)
+	})
+
+	gs.Run("get secret", func() {
+		var resSecret *pb.Secret
+		resSecret, err = gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: secret.Name})
+		gs.NoError(err)
+
+		gs.Equal(secret.Name, resSecret.Name)
+		gs.Equal(secret.Type, resSecret.Type)
+		gs.Equal(secret.Meta, resSecret.Meta)
+		gs.Equal(secret.Version, resSecret.Version)
+
+		resPayload := &model.CredsPayload{}
+		gs.NoError(gkMsgp.Deserialize(resSecret.PayloadRaw, resPayload))
+		gs.Equal(credsPayload, resPayload)
+	})
+}
+
 func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, _, token := gs.createTestUser(ctx)
+	token := gs.createTestUser(ctx)
 
 	for _, tt := range []struct {
 		name   string
@@ -187,7 +234,7 @@ func (gs *GrpcServerSuite) TestSecretCreateSuccessful() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, _, token := gs.createTestUser(ctx)
+	token := gs.createTestUser(ctx)
 
 	credsPayload := &model.CredsPayload{Login: "foo", Password: "bar"}
 	payloadRaw, err := gkMsgp.Serialize(credsPayload)
@@ -221,7 +268,7 @@ func (gs *GrpcServerSuite) TestStoragePing() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	_, _, token := gs.createTestUser(ctx)
+	token := gs.createTestUser(ctx)
 	_, err := gs.testClt.Ping(contextWithToken(ctx, token), &pb.Empty{})
 	gs.NoError(err)
 }
@@ -267,12 +314,12 @@ func (gs *GrpcServerSuite) createTestServer() {
 	gs.testClt = pb.NewGophKeeperServiceClient(conn)
 }
 
-func (gs *GrpcServerSuite) createTestUser(ctx context.Context) (string, string, string) {
+func (gs *GrpcServerSuite) createTestUser(ctx context.Context) string {
 	userLogin, userPassword := uuid.NewString(), uuid.NewString()
 	token, err := gs.testClt.UserCreate(ctx, &pb.User{Login: userLogin, Password: userPassword})
 	require.NoError(gs.T(), err)
 
-	return userLogin, userPassword, token.Token
+	return token.Token
 }
 
 func contextWithToken(ctx context.Context, tokenString string) context.Context {

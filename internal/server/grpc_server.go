@@ -42,6 +42,7 @@ const (
 	_msgSecretBadRequest     = "invalid secret"
 	_msgSecretFailedToCreate = "failed to create secret"
 	_msgSecretAlreadyExists  = "secret already exists"
+	_msgSecretNotFound       = "secret not found"
 )
 
 // GrpcServer represents gRPC server.
@@ -165,6 +166,41 @@ func (g *GrpcServer) SecretGetList(ctx context.Context, _ *pb.Empty) (*pb.Secret
 	return respList, nil
 }
 
+func (g *GrpcServer) SecretGet(ctx context.Context, in *pb.SecretGetRequest) (*pb.Secret, error) {
+	userID, err := g.getUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get from storage
+	dbSecret, err := g.stg.GetSecret(ctx, userID, in.Name)
+	if err != nil {
+		if errors.Is(err, storage.ErrSecretNotFound) {
+			g.logger.Errorf("[user=%d] secret [%s] get error: not found", userID, in.Name)
+			return nil, status.Error(codes.NotFound, _msgSecretNotFound)
+		}
+		g.logger.Errorf("[user=%d] secret [%s] get error: %v", userID, in.Name, err)
+		return nil, status.Error(codes.Internal, _msgSecretsFailedToGet)
+	}
+
+	// Decode payload
+	payloadRaw, err := cipher.AESDecrypt(dbSecret.PayloadRaw, g.serverSecret)
+	if err != nil {
+		g.logger.Errorf("[user=%d] secret [%s] get error: decrypt payload error: %v", userID, in.Name, err)
+		return nil, status.Error(codes.Internal, _msgSecretsFailedToGet)
+	}
+
+	secret := &pb.Secret{
+		Name:       dbSecret.Name,
+		Type:       pb.SecretType(dbSecret.Type),
+		Version:    dbSecret.Version,
+		Meta:       dbSecret.Meta,
+		PayloadRaw: payloadRaw,
+	}
+
+	return secret, nil
+}
+
 func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateRequest) (*pb.Empty, error) {
 	userID, err := g.getUserIDFromContext(ctx)
 	if err != nil {
@@ -185,7 +221,7 @@ func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateReques
 	// Encrypt payload
 	encPayload, err := cipher.AESEncrpyt(in.Secret.PayloadRaw, g.serverSecret)
 	if err != nil {
-		g.logger.Errorf("[user=%d] secret [%d] create error: encrypt payload error: %v", err, userID, in.Secret.Name)
+		g.logger.Errorf("[user=%d] secret [%s] create error: encrypt payload error: %v", userID, in.Secret.Name, err)
 		return nil, status.Error(codes.Internal, _msgSecretFailedToCreate)
 	}
 
