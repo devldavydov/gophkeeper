@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/devldavydov/gophkeeper/internal/common/cipher"
+	"github.com/devldavydov/gophkeeper/internal/common/model"
 	"github.com/devldavydov/gophkeeper/internal/common/token"
 	pb "github.com/devldavydov/gophkeeper/internal/grpc"
 	"github.com/devldavydov/gophkeeper/internal/grpc/interceptor"
@@ -35,8 +37,11 @@ const (
 	_msgUserNotFound               = "user not found"
 	_msgUserFailedToLogin          = "failed to login"
 	//
-	_msgSecretsNotFound    = "secrets not found"
-	_msgSecretsFailedToGet = "failed to get secrets"
+	_msgSecretsNotFound      = "secrets not found" //nolint:gosec // Ok
+	_msgSecretsFailedToGet   = "failed to get secrets"
+	_msgSecretBadRequest     = "invalid secret"
+	_msgSecretFailedToCreate = "failed to create secret"
+	_msgSecretAlreadyExists  = "secret already exists"
 )
 
 // GrpcServer represents gRPC server.
@@ -144,6 +149,7 @@ func (g *GrpcServer) SecretGetList(ctx context.Context, _ *pb.Empty) (*pb.Secret
 		if errors.Is(err, storage.ErrNoSecrets) {
 			return nil, status.Error(codes.NotFound, _msgSecretsNotFound)
 		}
+		g.logger.Errorf("[user=%d] secret get list error %v", userID, err)
 		return nil, status.Error(codes.Internal, _msgSecretsFailedToGet)
 	}
 
@@ -157,6 +163,53 @@ func (g *GrpcServer) SecretGetList(ctx context.Context, _ *pb.Empty) (*pb.Secret
 	}
 
 	return respList, nil
+}
+
+func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.Secret) (*pb.Empty, error) {
+	userID, err := g.getUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check secret
+	if err = model.ValidSecretType(model.SecretType(in.Type)); err != nil {
+		g.logger.Errorf("[user=%d] secret create error: invalid type [%d]", userID, in.Type)
+		return nil, status.Error(codes.InvalidArgument, _msgSecretBadRequest)
+	}
+
+	if in.Name == "" {
+		g.logger.Errorf("[user=%d] secret create error: empty name", userID)
+		return nil, status.Error(codes.InvalidArgument, _msgSecretBadRequest)
+	}
+
+	// Encrypt payload
+	encPayload, err := cipher.AESEncrpyt(in.PayloadRaw, g.serverSecret)
+	if err != nil {
+		g.logger.Errorf("[user=%d] secret [%d] create error: encrypt payload error: %v", err, userID, in.Name)
+		return nil, status.Error(codes.Internal, _msgSecretFailedToCreate)
+	}
+
+	// Create secret
+	secret := &model.Secret{
+		Type:       model.SecretType(in.Type),
+		Name:       in.Name,
+		Meta:       in.Meta,
+		Version:    in.Version,
+		PayloadRaw: encPayload,
+	}
+
+	err = g.stg.CreateSecret(ctx, userID, secret)
+	if err != nil {
+		if errors.Is(err, storage.ErrSecretAlreadyExists) {
+			g.logger.Errorf("[user=%d] secret [%s] create error: already exists", userID, in.Name)
+			return nil, status.Error(codes.AlreadyExists, _msgSecretFailedToCreate)
+		}
+
+		g.logger.Errorf("[user=%d] secret [%s] create error: %v", userID, in.Name, err)
+		return nil, status.Error(codes.Internal, _msgSecretFailedToCreate)
+	}
+
+	return &pb.Empty{}, nil
 }
 
 func (g *GrpcServer) Ping(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {

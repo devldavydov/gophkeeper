@@ -10,7 +10,6 @@ import (
 )
 
 func TestSecretTypeString(t *testing.T) {
-	assert.Equal(t, "Unknown", UnknownSecret.String())
 	assert.Equal(t, "Unknown", SecretType(100).String())
 	assert.Equal(t, "Credentials", CredsSecret.String())
 	assert.Equal(t, "Text", TextSecret.String())
@@ -110,7 +109,6 @@ func TestSecretGetPayload(t *testing.T) {
 		{input: NewTextPayload("foo"), secretType: TextSecret},
 		{input: NewBinaryPayload([]byte("foo")), secretType: BinarySecret},
 		{input: NewCardPayload("2202", "foo", "11/26", "777"), secretType: CardSecret},
-		{input: NewCredsPayload("foo", "bar"), secretType: UnknownSecret, isErr: true},
 		{input: NewCredsPayload("foo", "bar"), secretType: SecretType(100), isErr: true},
 		{input: NewCredsPayload("foo", "bar"), secretType: BinarySecret, isErr: true},
 	} {

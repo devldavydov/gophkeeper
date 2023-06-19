@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/devldavydov/gophkeeper/internal/common/model"
+	gkMsgp "github.com/devldavydov/gophkeeper/internal/common/msgp"
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	"github.com/devldavydov/gophkeeper/internal/common/token"
 	pb "github.com/devldavydov/gophkeeper/internal/grpc"
@@ -133,8 +135,86 @@ func (gs *GrpcServerSuite) TestSecretGetList() {
 		gs.Equal(codes.NotFound, status.Code())
 	})
 
-	// TODO create add secret
-	// Check list after create secrets
+	secretName1, secretName2 := "b"+uuid.NewString(), "a"+uuid.NewString()
+
+	gs.Run("create secrets", func() {
+		for _, secretName := range []string{secretName1, secretName2} {
+			secret := &pb.Secret{
+				Name: secretName, Type: pb.SecretType_CREDS, Version: 1, Meta: "", PayloadRaw: []byte("test"),
+			}
+
+			_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), secret)
+			gs.NoError(err)
+		}
+	})
+
+	gs.Run("get secret list", func() {
+		lst, err := gs.testClt.SecretGetList(contextWithToken(ctx, token), &pb.Empty{})
+		gs.NoError(err)
+		gs.NotNil(lst)
+
+		gs.Equal(2, len(lst.Items))
+		gs.Equal(secretName2, lst.Items[0].Name)
+		gs.Equal(secretName1, lst.Items[1].Name)
+	})
+}
+
+func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, _, token := gs.createTestUser(ctx)
+
+	for _, tt := range []struct {
+		name   string
+		secret *pb.Secret
+	}{
+		{name: "invalid type", secret: &pb.Secret{Type: 100}},
+		{name: "empty name", secret: &pb.Secret{Type: pb.SecretType_BINARY}},
+	} {
+		tt := tt
+		gs.Run(tt.name, func() {
+			_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), tt.secret)
+			gs.Error(err)
+			status, ok := status.FromError(err)
+			gs.True(ok)
+			gs.Equal(codes.InvalidArgument, status.Code())
+		})
+	}
+}
+
+func (gs *GrpcServerSuite) TestSecretCreateSuccessful() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, _, token := gs.createTestUser(ctx)
+
+	credsPayload := &model.CredsPayload{Login: "foo", Password: "bar"}
+	payloadRaw, err := gkMsgp.Serialize(credsPayload)
+	gs.NoError(err)
+
+	secret := &pb.Secret{
+		Type:       pb.SecretType_CREDS,
+		Name:       "test",
+		Meta:       "meta",
+		Version:    1,
+		PayloadRaw: payloadRaw,
+	}
+
+	gs.Run("create secret", func() {
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), secret)
+		gs.NoError(err)
+	})
+
+	gs.Run("create secret already exists", func() {
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), secret)
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.AlreadyExists, status.Code())
+	})
+
+	// TODO check after get
 }
 
 func (gs *GrpcServerSuite) TestStoragePing() {
@@ -161,7 +241,7 @@ func TestGrpcServerSuite(t *testing.T) {
 func (gs *GrpcServerSuite) createTestServer() {
 	buffer := 101024 * 1024
 	lis := bufconn.Listen(buffer)
-	serverSecret := []byte("GophKeeperTest")
+	serverSecret := []byte("GophKeeperSupaSecretKeyForCrypto")
 
 	srvCredentials, cltCredentials := getServerCredentials(), getClientCredentials()
 

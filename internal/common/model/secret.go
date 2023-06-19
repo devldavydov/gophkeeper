@@ -9,19 +9,19 @@ import (
 )
 
 var (
-	ErrUnknownPayload = errors.New("unknown secret payload")
-	ErrInvalidPayload = errors.New("invalid secret payload")
+	ErrUnknownPayload    = errors.New("unknown secret payload")
+	ErrInvalidPayload    = errors.New("invalid secret payload")
+	ErrInvalidSecretType = errors.New("invalid secret type")
 )
 
 // SecretType is an enum type for secret types.
-type SecretType int
+type SecretType int32
 
 const (
-	UnknownSecret SecretType = 0
-	CredsSecret   SecretType = 1
-	TextSecret    SecretType = 2
-	BinarySecret  SecretType = 3
-	CardSecret    SecretType = 4
+	CredsSecret  SecretType = 0
+	TextSecret   SecretType = 1
+	BinarySecret SecretType = 2
+	CardSecret   SecretType = 3
 )
 
 func (st SecretType) String() string {
@@ -34,10 +34,17 @@ func (st SecretType) String() string {
 		return "Binary"
 	case CardSecret:
 		return "Card"
-	case UnknownSecret:
-		return "Unknown"
 	default:
 		return "Unknown"
+	}
+}
+
+func ValidSecretType(st SecretType) error {
+	switch SecretType(st) {
+	case CredsSecret, TextSecret, BinarySecret, CardSecret:
+		return nil
+	default:
+		return ErrInvalidSecretType
 	}
 }
 
@@ -77,8 +84,6 @@ func (s *Secret) GetPayload() (Payload, error) {
 		decObj = &BinaryPayload{}
 	case CardSecret:
 		decObj = &CardPayload{}
-	case UnknownSecret:
-		return nil, ErrUnknownPayload
 	default:
 		return nil, ErrUnknownPayload
 	}
