@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/devldavydov/gophkeeper/internal/common/token"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -22,14 +24,19 @@ const (
 
 	_userTokenExpiration = 24 * time.Hour
 
-	_msgPingFailed                 = "ping failed"
+	_msgPingFailed = "ping failed"
+	//
 	_msgUserCredentialsBadRequest  = "invalid credentials" //nolint:gosec // Ok
 	_msgUserFailedToCreate         = "failed to create user"
 	_msgUserAlreadyExists          = "user already exists"
 	_msgUserFailedToCreateToken    = "failed to create user token"
+	_msgUserTokenError             = "user token error"
 	_msgUserInvalidLoginOrPassword = "user invalid login or password"
 	_msgUserNotFound               = "user not found"
 	_msgUserFailedToLogin          = "failed to login"
+	//
+	_msgSecretsNotFound    = "secrets not found"
+	_msgSecretsFailedToGet = "failed to get secrets"
 )
 
 // GrpcServer represents gRPC server.
@@ -126,6 +133,32 @@ func (g *GrpcServer) UserLogin(ctx context.Context, user *pb.User) (*pb.UserAuth
 	return &pb.UserAuthToken{Token: token}, nil
 }
 
+func (g *GrpcServer) SecretGetList(ctx context.Context, _ *pb.Empty) (*pb.SecretList, error) {
+	userID, err := g.getUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	dbSecretList, err := g.stg.GetAllSecrets(ctx, userID)
+	if err != nil {
+		if errors.Is(err, storage.ErrNoSecrets) {
+			return nil, status.Error(codes.NotFound, _msgSecretsNotFound)
+		}
+		return nil, status.Error(codes.Internal, _msgSecretsFailedToGet)
+	}
+
+	respList := &pb.SecretList{Items: make([]*pb.SecretListItem, 0, len(dbSecretList))}
+	for _, dbItem := range dbSecretList {
+		respList.Items = append(respList.Items, &pb.SecretListItem{
+			Name:    dbItem.Name,
+			Type:    pb.SecretType(dbItem.Type),
+			Version: dbItem.Version,
+		})
+	}
+
+	return respList, nil
+}
+
 func (g *GrpcServer) Ping(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {
 	res := g.stg.Ping(ctx)
 	if res {
@@ -141,4 +174,26 @@ func hashPassword(password string) (string, error) {
 
 func checkPassword(password, pwdHash string) error {
 	return bcrypt.CompareHashAndPassword([]byte(pwdHash), []byte(password))
+}
+
+func (g *GrpcServer) getUserIDFromContext(ctx context.Context) (int64, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		g.logger.Error("user token error: no metadata")
+		return 0, status.Error(codes.Internal, _msgUserTokenError)
+	}
+
+	sUserID := md.Get(interceptor.MetaUserID)
+	if len(sUserID) != 1 {
+		g.logger.Error("user token error: wrong metadata length")
+		return 0, status.Error(codes.Internal, _msgUserTokenError)
+	}
+
+	userID, err := strconv.ParseInt(sUserID[0], 10, 64)
+	if err != nil {
+		g.logger.Errorf("user token error: %v", err)
+		return 0, status.Error(codes.Internal, _msgUserTokenError)
+	}
+
+	return userID, nil
 }

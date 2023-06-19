@@ -119,6 +119,24 @@ func (gs *GrpcServerSuite) TestLoginUser() {
 	})
 }
 
+func (gs *GrpcServerSuite) TestSecretGetList() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, _, token := gs.createTestUser(ctx)
+
+	gs.Run("get empty secret list", func() {
+		_, err := gs.testClt.SecretGetList(contextWithToken(ctx, token), &pb.Empty{})
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.NotFound, status.Code())
+	})
+
+	// TODO create add secret
+	// Check list after create secrets
+}
+
 func (gs *GrpcServerSuite) TestStoragePing() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
