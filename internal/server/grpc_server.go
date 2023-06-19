@@ -43,6 +43,7 @@ const (
 	_msgSecretFailedToCreate = "failed to create secret"
 	_msgSecretAlreadyExists  = "secret already exists"
 	_msgSecretNotFound       = "secret not found"
+	_msgSecretFailedToDelete = "failed to delete secret"
 )
 
 // GrpcServer represents gRPC server.
@@ -243,6 +244,24 @@ func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateReques
 
 		g.logger.Errorf("[user=%d] secret [%s] create error: %v", userID, in.Secret.Name, err)
 		return nil, status.Error(codes.Internal, _msgSecretFailedToCreate)
+	}
+
+	return &pb.Empty{}, nil
+}
+
+func (g *GrpcServer) SecretUpdate(ctx context.Context, in *pb.SecretUpdateRequest) (*pb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SecretUpdate not implemented")
+}
+func (g *GrpcServer) SecretDelete(ctx context.Context, in *pb.SecretDeleteRequest) (*pb.Empty, error) {
+	userID, err := g.getUserIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = g.stg.DeleteSecret(ctx, userID, in.Name)
+	if err != nil {
+		g.logger.Errorf("[user=%d] secret [%s] delete error: %v", userID, in.Name, err)
+		return nil, status.Error(codes.Internal, _msgSecretFailedToDelete)
 	}
 
 	return &pb.Empty{}, nil

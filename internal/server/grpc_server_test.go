@@ -159,7 +159,7 @@ func (gs *GrpcServerSuite) TestSecretGetList() {
 	})
 }
 
-func (gs *GrpcServerSuite) TestSecretGet() {
+func (gs *GrpcServerSuite) TestSecretGetCreate() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -204,6 +204,14 @@ func (gs *GrpcServerSuite) TestSecretGet() {
 		gs.NoError(gkMsgp.Deserialize(resSecret.PayloadRaw, resPayload))
 		gs.Equal(credsPayload, resPayload)
 	})
+
+	gs.Run("create secret already exists", func() {
+		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.AlreadyExists, status.Code())
+	})
 }
 
 func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
@@ -230,38 +238,41 @@ func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
 	}
 }
 
-func (gs *GrpcServerSuite) TestSecretCreateSuccessful() {
+func (gs *GrpcServerSuite) TestSecretDelete() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	token := gs.createTestUser(ctx)
 
-	credsPayload := &model.CredsPayload{Login: "foo", Password: "bar"}
-	payloadRaw, err := gkMsgp.Serialize(credsPayload)
-	gs.NoError(err)
-
 	secret := &pb.Secret{
 		Type:       pb.SecretType_CREDS,
 		Name:       "test",
-		Meta:       "meta",
 		Version:    1,
-		PayloadRaw: payloadRaw,
+		PayloadRaw: []byte("test"),
 	}
 
 	gs.Run("create secret", func() {
-		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
+		_, err := gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
 		gs.NoError(err)
 	})
 
-	gs.Run("create secret already exists", func() {
-		_, err = gs.testClt.SecretCreate(contextWithToken(ctx, token), &pb.SecretCreateRequest{Secret: secret})
+	gs.Run("get exists", func() {
+		_, err := gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: secret.Name})
+		gs.NoError(err)
+	})
+
+	gs.Run("delete secret", func() {
+		_, err := gs.testClt.SecretDelete(contextWithToken(ctx, token), &pb.SecretDeleteRequest{Name: secret.Name})
+		gs.NoError(err)
+	})
+
+	gs.Run("get not found", func() {
+		_, err := gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: secret.Name})
 		gs.Error(err)
 		status, ok := status.FromError(err)
 		gs.True(ok)
-		gs.Equal(codes.AlreadyExists, status.Code())
+		gs.Equal(codes.NotFound, status.Code())
 	})
-
-	// TODO check after get
 }
 
 func (gs *GrpcServerSuite) TestStoragePing() {
