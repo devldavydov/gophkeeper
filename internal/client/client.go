@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/devldavydov/gophkeeper/internal/common/model"
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	pb "github.com/devldavydov/gophkeeper/internal/grpc"
 	"github.com/rivo/tview"
@@ -17,17 +18,19 @@ const _serverRequestTimeout = 15 * time.Second
 
 // Client represents client application.
 type Client struct {
-	settings *Settings
-	logger   *logrus.Logger
-	gClt     pb.GophKeeperServiceClient
-	cltToken string
+	settings   *Settings
+	logger     *logrus.Logger
+	gClt       pb.GophKeeperServiceClient
+	cltToken   string
+	lstSecrets []model.SecretInfo
 	//
-	uiApp          *tview.Application
-	uiPages        *tview.Pages
-	wdgLogin       *tview.Form
-	wdgCreateUser  *tview.Form
-	wdgUserSecrets *tview.Form
-	wdgError       *tview.Form
+	uiApp         *tview.Application
+	uiPages       *tview.Pages
+	wdgLogin      *tview.Form
+	wdgCreateUser *tview.Form
+	wdgError      *tview.Form
+	wdgUser       *tview.TextView
+	wdgLstSecrets *tview.List
 }
 
 // NewClient creates new Application object.
