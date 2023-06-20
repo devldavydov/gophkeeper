@@ -1,10 +1,6 @@
 package client
 
 import (
-	"context"
-	"time"
-
-	pb "github.com/devldavydov/gophkeeper/internal/grpc"
 	"github.com/rivo/tview"
 )
 
@@ -12,6 +8,13 @@ const (
 	_pageLogin       = "login"
 	_pageCreateUser  = "create user"
 	_pageUserSecrets = "user secrets"
+	_pageError       = "error"
+
+	_msgInternalServerError = "Internal server error"
+	_msgUserAlreadyExists   = "User already exists"
+	_msgUserInvalidCreds    = "User invalid credentials" //nolint:gosec // OK
+	_msgUserNotFound        = "User not found"
+	_msgUserLoginFailed     = "User with login/password failed"
 )
 
 func (r *Client) createUIApplication() {
@@ -21,6 +24,7 @@ func (r *Client) createUIApplication() {
 	r.uiCreateLoginPage()
 	r.uiCreateUserPage()
 	r.uiCreateUserSecretsPage()
+	r.uiCreateErrorPage()
 
 	r.uiApp.
 		SetRoot(r.uiPages, true).
@@ -67,6 +71,16 @@ func (r *Client) uiCreateUserSecretsPage() {
 	r.uiPages.AddPage(_pageUserSecrets, r.wdgUserSecrets, true, false)
 }
 
+func (r *Client) uiCreateErrorPage() {
+	r.wdgError = tview.NewForm().
+		AddTextView("Error", "", 50, 5, true, true).
+		AddButton("Back", nil)
+	r.wdgUserSecrets.
+		SetBorder(true).
+		SetTitle("GophKeeper - Error")
+	r.uiPages.AddPage(_pageError, r.wdgError, true, false)
+}
+
 func (r *Client) uiSwitchToLogin() {
 	r.wdgLogin.GetFormItemByLabel("Login").(*tview.InputField).SetText("")
 	r.wdgLogin.GetFormItemByLabel("Password").(*tview.InputField).SetText("")
@@ -86,26 +100,11 @@ func (r *Client) uiSwitchToUserSecrets() {
 	r.uiPages.SwitchToPage(_pageUserSecrets)
 }
 
-func (r *Client) doCreateUser() {
-	userLogin := r.wdgCreateUser.GetFormItemByLabel("Login").(*tview.InputField).GetText()
-	userPassword := r.wdgCreateUser.GetFormItemByLabel("Password").(*tview.InputField).GetText()
+func (r *Client) uiSwitchToError(errMsg string, fnCallback func()) {
+	r.wdgError.GetFormItemByLabel("Error").(*tview.TextView).SetText(errMsg)
+	r.wdgError.SetFocus(r.wdgError.GetFormItemIndex("Error"))
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	pbToken, _ := r.gClt.UserCreate(ctx, &pb.User{Login: userLogin, Password: userPassword})
-	r.cltToken = pbToken.Token
-	r.uiSwitchToUserSecrets()
-}
-
-func (r *Client) doLogin() {
-	userLogin := r.wdgLogin.GetFormItemByLabel("Login").(*tview.InputField).GetText()
-	userPassword := r.wdgLogin.GetFormItemByLabel("Password").(*tview.InputField).GetText()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	pbToken, _ := r.gClt.UserLogin(ctx, &pb.User{Login: userLogin, Password: userPassword})
-	r.cltToken = pbToken.Token
-	r.uiSwitchToUserSecrets()
+	btnBackInd := r.wdgError.GetButtonIndex("Back")
+	r.wdgError.GetButton(btnBackInd).SetSelectedFunc(fnCallback)
+	r.uiPages.SwitchToPage(_pageError)
 }

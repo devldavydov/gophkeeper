@@ -4,6 +4,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"time"
 
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	pb "github.com/devldavydov/gophkeeper/internal/grpc"
@@ -11,6 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
+
+const _serverRequestTimeout = 15 * time.Second
 
 // Client represents client application.
 type Client struct {
@@ -24,6 +27,7 @@ type Client struct {
 	wdgLogin       *tview.Form
 	wdgCreateUser  *tview.Form
 	wdgUserSecrets *tview.Form
+	wdgError       *tview.Form
 }
 
 // NewClient creates new Application object.
