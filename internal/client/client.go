@@ -24,13 +24,14 @@ type Client struct {
 	cltToken   string
 	lstSecrets []model.SecretInfo
 	//
-	uiApp         *tview.Application
-	uiPages       *tview.Pages
-	wdgLogin      *tview.Form
-	wdgCreateUser *tview.Form
-	wdgError      *tview.Form
-	wdgUser       *tview.TextView
-	wdgLstSecrets *tview.List
+	uiApp               *tview.Application
+	uiPages             *tview.Pages
+	wdgLogin            *tview.Form
+	wdgCreateUser       *tview.Form
+	wdgError            *tview.Form
+	wdgUser             *tview.TextView
+	wdgLstSecrets       *tview.List
+	wdgCreateUserSecret *tview.Form
 }
 
 // NewClient creates new Application object.
