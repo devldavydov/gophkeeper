@@ -1,4 +1,6 @@
 // Package represents main application for client.
+//
+//nolint:gochecknoglobals // build inline variable
 package main
 
 import (
@@ -41,16 +43,16 @@ func run() error {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
 
-	appSettings, err := ApplicationSettingsAdapt(config)
+	cltSettings, err := ClientSettingsAdapt(config)
 	if err != nil {
 		return fmt.Errorf("failed to create application settings: %w", err)
 	}
 
 	logger.Info(appVer)
-	appClient := client.NewApplication(appSettings, logger)
+	client := client.NewClient(cltSettings, logger)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer stop()
 
-	return appClient.Start(ctx)
+	return client.Start(ctx)
 }

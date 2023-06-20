@@ -17,11 +17,11 @@ func TestApplicatrionSettingsAdaptFromEnv(t *testing.T) {
 	config, err := LoadConfig(*testFlagSet, []string{})
 	assert.NoError(t, err)
 
-	appSettings, err := ApplicationSettingsAdapt(config)
+	cltSettings, err := ClientSettingsAdapt(config)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "127.0.0.1:8888", appSettings.ServerAddress.String())
-	assert.Equal(t, "/tmp/ca.cert", appSettings.TLSCACertPath)
+	assert.Equal(t, "127.0.0.1:8888", cltSettings.ServerAddress.String())
+	assert.Equal(t, "/tmp/ca.cert", cltSettings.TLSCACertPath)
 }
 
 func TestApplicationSettingsAdaptFromFlag(t *testing.T) {
@@ -33,11 +33,11 @@ func TestApplicationSettingsAdaptFromFlag(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	appSettings, err := ApplicationSettingsAdapt(config)
+	cltSettings, err := ClientSettingsAdapt(config)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "127.0.0.1:8888", appSettings.ServerAddress.String())
-	assert.Equal(t, "/tmp/ca.cert", appSettings.TLSCACertPath)
+	assert.Equal(t, "127.0.0.1:8888", cltSettings.ServerAddress.String())
+	assert.Equal(t, "/tmp/ca.cert", cltSettings.TLSCACertPath)
 }
 
 func TestApplicationSettingsWithDefault(t *testing.T) {
@@ -47,11 +47,11 @@ func TestApplicationSettingsWithDefault(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	appSettings, err := ApplicationSettingsAdapt(config)
+	cltSettings, err := ClientSettingsAdapt(config)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "127.0.0.1:8080", appSettings.ServerAddress.String())
-	assert.Equal(t, "/tmp/ca.cert", appSettings.TLSCACertPath)
+	assert.Equal(t, "127.0.0.1:8080", cltSettings.ServerAddress.String())
+	assert.Equal(t, "/tmp/ca.cert", cltSettings.TLSCACertPath)
 }
 
 func TestApplicationSettingsAdaptError(t *testing.T) {
@@ -80,7 +80,7 @@ func TestApplicationSettingsAdaptError(t *testing.T) {
 
 			assert.NoError(t, err)
 
-			_, err = ApplicationSettingsAdapt(config)
+			_, err = ClientSettingsAdapt(config)
 			assert.Error(t, err)
 		})
 	}

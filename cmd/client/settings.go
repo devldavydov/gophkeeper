@@ -51,7 +51,7 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	return config, nil
 }
 
-func ApplicationSettingsAdapt(config *Config) (*client.ApplicationSettings, error) {
+func ClientSettingsAdapt(config *Config) (*client.Settings, error) {
 	serverAddress, err := nettools.NewAddress(config.ServerAddress)
 	if err != nil {
 		return nil, err
@@ -61,5 +61,5 @@ func ApplicationSettingsAdapt(config *Config) (*client.ApplicationSettings, erro
 		return nil, errInvalidSettings
 	}
 
-	return client.NewApplicationSettings(serverAddress, config.CACert), nil
+	return client.NewSettings(serverAddress, config.CACert), nil
 }
