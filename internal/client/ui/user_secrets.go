@@ -42,9 +42,7 @@ func (r *App) doReloadUserSecrets() {
 			fmt.Sprintf("%s (%s)", scrt.Name, scrt.Type),
 			"",
 			0,
-			func() {
-				r.doEditUserSecret(scrt.Name)
-			})
+			r.doEditUserSecret)
 	}
 
 	r.uiPages.SwitchToPage(_pageUserSecrets)

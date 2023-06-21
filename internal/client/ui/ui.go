@@ -14,15 +14,17 @@ const (
 	_pageCreateUser       = "create user"
 	_pageUserSecrets      = "user secrets"
 	_pageCreateUserSecret = "create user secret"
+	_pageEditUserSecret   = "edit user secret"
 	_pageError            = "error"
 
-	_msgInternalServerError     = "Internal server error"
-	_msgClientError             = "Internal client error"
-	_msgUserAlreadyExists       = "User already exists"
-	_msgUserInvalidCreds        = "User invalid credentials"
-	_msgUserNotFound            = "User not found"
-	_msgUserLoginFailed         = "User wrong login/password"
-	_msgUserSecretAlreadyExists = "User secret already exists"
+	_msgInternalServerError = "Internal server error"
+	_msgClientError         = "Internal client error"
+	_msgUserAlreadyExists   = "User already exists"
+	_msgUserInvalidCreds    = "User invalid credentials"
+	_msgUserNotFound        = "User not found"
+	_msgUserLoginFailed     = "User wrong login/password"
+	_msgSecretAlreadyExists = "Secret already exists"
+	_msgSecretNotFound      = "Secret not found. Maybe it was removed in another session."
 )
 
 // App represents user interface application.
@@ -36,6 +38,7 @@ type App struct {
 	frmLogin            *tview.Form
 	frmCreateUser       *tview.Form
 	frmCreateUserSecret *tview.Form
+	frmEditUserSecret   *tview.Form
 	frmError            *tview.Form
 	wdgLstSecrets       *tview.List
 	wdgUser             *tview.TextView
@@ -51,7 +54,8 @@ func (r *App) Run() error {
 	r.createLoginPage()
 	r.createUserPage()
 	r.createUserSecretsPage()
-	r.createUserCreateSecretPage()
+	r.createCreateUserSecretPage()
+	r.createEditUserSecretPage()
 	r.createErrorPage()
 
 	r.app.

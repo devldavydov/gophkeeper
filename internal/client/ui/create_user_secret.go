@@ -9,7 +9,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func (r *App) createUserCreateSecretPage() {
+func (r *App) createCreateUserSecretPage() {
 	r.frmCreateUserSecret = tview.NewForm()
 	r.frmCreateUserSecret.
 		AddDropDown(
@@ -81,7 +81,7 @@ func (r *App) doCreateUserSecret() {
 	if err != nil {
 		switch {
 		case errors.Is(err, transport.ErrSecretAlreadyExists):
-			r.showError(_msgUserSecretAlreadyExists, r.showCreateUserSecret)
+			r.showError(_msgSecretAlreadyExists, r.showCreateUserSecret)
 		case errors.Is(err, transport.ErrInternalError):
 			r.showError(_msgClientError, r.showCreateUserSecret)
 		case errors.Is(err, transport.ErrInternalServerError):

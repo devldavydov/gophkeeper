@@ -15,6 +15,7 @@ var (
 	ErrUserNotFound           = errors.New("user not found")
 	ErrUserLoginFailed        = errors.New("user wrong login/password")
 	ErrSecretAlreadyExists    = errors.New("secret already exists")
+	ErrSecretNotFound         = errors.New("secret not found")
 )
 
 // Transport is an interface to connect with server.
@@ -23,5 +24,6 @@ type Transport interface {
 	UserLogin(userLogin, userPassword string) (string, error)
 
 	SecretGetList(token string) ([]model.SecretInfo, error)
+	SecretGet(token, name string) (*model.Secret, error)
 	SecretCreate(token string, secret *model.Secret, payload model.Payload) error
 }

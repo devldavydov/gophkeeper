@@ -120,6 +120,34 @@ func (gt *GrpcTransport) SecretGetList(token string) ([]model.SecretInfo, error)
 	return lstSecretInfo, nil
 }
 
+func (gt *GrpcTransport) SecretGet(token, name string) (*model.Secret, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
+	defer cancel()
+
+	pbSecret, err := gt.gClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: name})
+	if err != nil {
+		status, ok := status.FromError(err)
+		if !ok {
+			return nil, ErrInternalServerError
+		}
+
+		switch status.Code() { //nolint:exhaustive // OK
+		case codes.NotFound:
+			return nil, ErrSecretNotFound
+		default:
+			return nil, ErrInternalServerError
+		}
+	}
+
+	return &model.Secret{
+		Type:       model.SecretType(pbSecret.Type),
+		Name:       pbSecret.Name,
+		Meta:       pbSecret.Meta,
+		Version:    pbSecret.Version,
+		PayloadRaw: pbSecret.PayloadRaw,
+	}, nil
+}
+
 func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret, payload model.Payload) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
