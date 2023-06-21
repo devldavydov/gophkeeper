@@ -1,5 +1,5 @@
 package ui
 
-func (r *UIApp) doEditUserSecret(secretName string) {
+func (r *App) doEditUserSecret(secretName string) {
 	panic(secretName)
 }

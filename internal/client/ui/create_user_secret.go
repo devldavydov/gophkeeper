@@ -9,7 +9,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func (r *UIApp) createUserCreateSecretPage() {
+func (r *App) createUserCreateSecretPage() {
 	r.frmCreateUserSecret = tview.NewForm()
 	r.frmCreateUserSecret.
 		AddDropDown(
@@ -35,14 +35,14 @@ func (r *UIApp) createUserCreateSecretPage() {
 	r.uiPages.AddPage(_pageCreateUserSecret, uiCenteredWidget(r.frmCreateUserSecret, 0, 10), true, false)
 }
 
-func (r *UIApp) showCreateUserSecret() {
+func (r *App) showCreateUserSecret() {
 	r.frmCreateUserSecret.GetFormItemByLabel("Type").(*tview.DropDown).SetCurrentOption(0)
 	r.frmCreateUserSecret.GetFormItemByLabel("Name").(*tview.InputField).SetText("")
 	r.frmCreateUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).SetText("", true)
 	r.uiPages.SwitchToPage(_pageCreateUserSecret)
 }
 
-func (r *UIApp) doCreateUserSecret() {
+func (r *App) doCreateUserSecret() {
 	secret := &model.Secret{
 		Name: r.frmCreateUserSecret.GetFormItemByLabel("Name").(*tview.InputField).GetText(),
 		Meta: r.frmCreateUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).GetText(),
@@ -93,7 +93,7 @@ func (r *UIApp) doCreateUserSecret() {
 	r.doReloadUserSecrets()
 }
 
-func (r *UIApp) uiChangeSecretPayloadFields(choosenType string, _ int) {
+func (r *App) uiChangeSecretPayloadFields(choosenType string, _ int) {
 	metaIndex := r.frmCreateUserSecret.GetFormItemIndex("Meta")
 	i := r.frmCreateUserSecret.GetFormItemCount() - 1
 	for i != metaIndex {

@@ -2,7 +2,7 @@ package ui
 
 import "github.com/rivo/tview"
 
-func (r *UIApp) createErrorPage() {
+func (r *App) createErrorPage() {
 	r.frmError = tview.NewForm().
 		AddTextView("Message", "", 0, 1, true, true).
 		AddButton("Back", nil)
@@ -14,7 +14,7 @@ func (r *UIApp) createErrorPage() {
 	r.uiPages.AddPage(_pageError, flex, true, false)
 }
 
-func (r *UIApp) showError(errMsg string, fnCallback func()) {
+func (r *App) showError(errMsg string, fnCallback func()) {
 	r.frmError.GetFormItemByLabel("Message").(*tview.TextView).SetText(errMsg)
 	r.frmError.SetFocus(r.frmError.GetFormItemIndex("Error"))
 

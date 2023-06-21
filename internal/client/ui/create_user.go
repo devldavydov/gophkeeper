@@ -1,3 +1,4 @@
+//nolint:dupl // OK
 package ui
 
 import (
@@ -7,7 +8,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func (r *UIApp) createUserPage() {
+func (r *App) createUserPage() {
 	r.frmCreateUser = tview.NewForm().
 		AddInputField("Login", "", 0, nil, nil).
 		AddPasswordField("Password", "", 0, '*', nil).
@@ -22,14 +23,14 @@ func (r *UIApp) createUserPage() {
 	r.uiPages.AddPage(_pageCreateUser, flex, true, false)
 }
 
-func (r *UIApp) showCreateUser() {
+func (r *App) showCreateUser() {
 	r.frmCreateUser.GetFormItemByLabel("Login").(*tview.InputField).SetText("")
 	r.frmCreateUser.GetFormItemByLabel("Password").(*tview.InputField).SetText("")
 	r.frmCreateUser.SetFocus(r.frmCreateUser.GetFormItemIndex("Login"))
 	r.uiPages.SwitchToPage(_pageCreateUser)
 }
 
-func (r *UIApp) doCreateUser() {
+func (r *App) doCreateUser() {
 	userLogin := r.frmCreateUser.GetFormItemByLabel("Login").(*tview.InputField).GetText()
 	userPassword := r.frmCreateUser.GetFormItemByLabel("Password").(*tview.InputField).GetText()
 

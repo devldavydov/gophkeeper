@@ -1,4 +1,6 @@
 // Package ui contains user intreface functionality.
+//
+//nolint:gosec // OK
 package ui
 
 import (
@@ -11,7 +13,7 @@ const (
 	_pageLogin            = "login"
 	_pageCreateUser       = "create user"
 	_pageUserSecrets      = "user secrets"
-	_pageCreateUserSecret = "create user secret" //nolint:gosec // OK
+	_pageCreateUserSecret = "create user secret"
 	_pageError            = "error"
 
 	_msgInternalServerError     = "Internal server error"
@@ -23,8 +25,8 @@ const (
 	_msgUserSecretAlreadyExists = "User secret already exists"
 )
 
-// UIApp represents user interface application.
-type UIApp struct {
+// App represents user interface application.
+type App struct {
 	cltToken   string
 	tr         transport.Transport
 	lstSecrets []model.SecretInfo
@@ -39,11 +41,11 @@ type UIApp struct {
 	wdgUser             *tview.TextView
 }
 
-func NewApp(tr transport.Transport) *UIApp {
-	return &UIApp{tr: tr, app: tview.NewApplication()}
+func NewApp(tr transport.Transport) *App {
+	return &App{tr: tr, app: tview.NewApplication()}
 }
 
-func (r *UIApp) Run() error {
+func (r *App) Run() error {
 	r.uiPages = tview.NewPages()
 
 	r.createLoginPage()

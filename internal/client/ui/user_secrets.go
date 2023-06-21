@@ -6,7 +6,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func (r *UIApp) createUserSecretsPage() {
+func (r *App) createUserSecretsPage() {
 	r.wdgLstSecrets = tview.NewList().ShowSecondaryText(false)
 	r.wdgLstSecrets.SetBorder(true).SetTitle("Secrets")
 
@@ -25,7 +25,7 @@ func (r *UIApp) createUserSecretsPage() {
 	r.uiPages.AddPage(_pageUserSecrets, uiCenteredWidget(flexSecrets, 0, 10), true, false)
 }
 
-func (r *UIApp) doReloadUserSecrets() {
+func (r *App) doReloadUserSecrets() {
 	r.wdgLstSecrets.Clear()
 
 	// Load secrets from server
