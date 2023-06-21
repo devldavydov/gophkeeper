@@ -163,7 +163,7 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret, payloa
 			Meta:       secret.Meta,
 			Type:       pb.SecretType(secret.Type),
 			PayloadRaw: payloadRaw,
-			Version:    time.Now().UTC().UnixNano(),
+			Version:    1,
 		},
 	}
 
@@ -177,6 +177,46 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret, payloa
 		switch status.Code() { //nolint:exhaustive // OK
 		case codes.AlreadyExists:
 			return ErrSecretAlreadyExists
+		default:
+			return ErrInternalServerError
+		}
+	}
+
+	return nil
+}
+
+func (gt *GrpcTransport) SecretUpdate(
+	token, name string,
+	updSecret *model.SecretUpdate,
+	updPayload model.Payload,
+) error {
+	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
+	defer cancel()
+
+	payloadRaw, err := gkMsgp.Serialize(updPayload.(msgp.Encodable))
+	if err != nil {
+		return ErrInternalError
+	}
+
+	updReq := &pb.SecretUpdateRequest{
+		Name:       name,
+		Meta:       updSecret.Meta,
+		Version:    updSecret.Version,
+		PayloadRaw: payloadRaw,
+	}
+
+	_, err = gt.gClt.SecretUpdate(contextWithToken(ctx, token), updReq)
+	if err != nil {
+		status, ok := status.FromError(err)
+		if !ok {
+			return ErrInternalServerError
+		}
+
+		switch status.Code() { //nolint:exhaustive // OK
+		case codes.NotFound:
+			return ErrSecretNotFound
+		case codes.FailedPrecondition:
+			return ErrSecretOutdated
 		default:
 			return ErrInternalServerError
 		}

@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"encoding/hex"
 	"errors"
 
 	"github.com/devldavydov/gophkeeper/internal/client/transport"
@@ -66,8 +65,9 @@ func (r *App) doCreateUserSecret() {
 		)
 	case model.BinarySecret.String():
 		secret.Type = model.BinarySecret
-		binData, _ := hex.DecodeString(r.frmCreateUserSecret.GetFormItemByLabel("Binary").(*tview.TextArea).GetText())
-		payload = model.NewBinaryPayload(binData)
+		payload = model.NewBinaryPayload([]byte(
+			r.frmCreateUserSecret.GetFormItemByLabel("Binary").(*tview.TextArea).GetText(),
+		))
 	case model.CardSecret.String():
 		secret.Type = model.CardSecret
 		payload = model.NewCardPayload(

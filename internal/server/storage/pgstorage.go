@@ -186,7 +186,7 @@ func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string
 	}
 
 	// Check version
-	if curVersion > update.Version {
+	if curVersion >= update.Version {
 		return ErrSecretOutdated
 	}
 

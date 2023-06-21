@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"encoding/hex"
 	"errors"
 
 	"github.com/devldavydov/gophkeeper/internal/client/transport"
@@ -15,7 +14,7 @@ func (r *App) createEditUserSecretPage() {
 		AddInputField("Type", "", 0, nil, nil).
 		AddInputField("Name", "", 0, nil, nil).
 		AddTextArea("Meta", "", 0, 3, 0, nil).
-		AddButton("Save", nil).
+		AddButton("Save", r.doSaveSecret).
 		AddButton("Delete", r.doDeleteUserSecret).
 		AddButton("Back to list", r.doReloadUserSecrets)
 	r.frmCreateUserSecret.
@@ -55,7 +54,7 @@ func (r *App) showEditUserSecretPage(secret *model.Secret) {
 		r.frmEditUserSecret.AddTextArea("Text", text.Data, 0, 3, 0, nil)
 	case model.BinarySecret:
 		bin, _ := payload.(*model.BinaryPayload)
-		r.frmEditUserSecret.AddTextArea("Binary", hex.EncodeToString(bin.Data), 0, 3, 0, nil)
+		r.frmEditUserSecret.AddTextArea("Binary", string(bin.Data), 0, 3, 0, nil)
 	case model.CardSecret:
 		card, _ := payload.(*model.CardPayload)
 		r.frmEditUserSecret.
@@ -88,6 +87,54 @@ func (r *App) doDeleteUserSecret() {
 	secretName := r.frmEditUserSecret.GetFormItemByLabel("Name").(*tview.InputField).GetText()
 	if err := r.tr.SecretDelete(r.cltToken, secretName); err != nil {
 		r.showError(_msgInternalServerError, r.doReloadUserSecrets)
+		return
+	}
+
+	r.doReloadUserSecrets()
+}
+
+func (r *App) doSaveSecret() {
+	curSecret := r.lstSecrets[r.wdgLstSecrets.GetCurrentItem()]
+
+	updSecret := &model.SecretUpdate{
+		Meta:    r.frmEditUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).GetText(),
+		Version: curSecret.Version + 1,
+	}
+
+	var payload model.Payload
+	switch curSecret.Type {
+	case model.CredsSecret:
+		payload = model.NewCredsPayload(
+			r.frmEditUserSecret.GetFormItemByLabel("Login").(*tview.InputField).GetText(),
+			r.frmEditUserSecret.GetFormItemByLabel("Password").(*tview.InputField).GetText(),
+		)
+	case model.TextSecret:
+		payload = model.NewTextPayload(
+			r.frmEditUserSecret.GetFormItemByLabel("Text").(*tview.TextArea).GetText(),
+		)
+	case model.BinarySecret:
+		payload = model.NewBinaryPayload([]byte(
+			r.frmEditUserSecret.GetFormItemByLabel("Binary").(*tview.TextArea).GetText(),
+		))
+	case model.CardSecret:
+		payload = model.NewCardPayload(
+			r.frmEditUserSecret.GetFormItemByLabel("Card number").(*tview.InputField).GetText(),
+			r.frmEditUserSecret.GetFormItemByLabel("Card holder").(*tview.InputField).GetText(),
+			r.frmEditUserSecret.GetFormItemByLabel("Valid thru").(*tview.InputField).GetText(),
+			r.frmEditUserSecret.GetFormItemByLabel("CVV").(*tview.InputField).GetText(),
+		)
+	}
+
+	err := r.tr.SecretUpdate(r.cltToken, curSecret.Name, updSecret, payload)
+	if err != nil {
+		switch {
+		case errors.Is(err, transport.ErrInternalServerError):
+			r.showError(_msgInternalServerError, r.doReloadUserSecrets)
+		case errors.Is(err, transport.ErrSecretNotFound):
+			r.showError(_msgSecretNotFound, r.doReloadUserSecrets)
+		case errors.Is(err, transport.ErrSecretOutdated):
+			r.showError(_msgSecretOutdated, r.doReloadUserSecrets)
+		}
 		return
 	}
 

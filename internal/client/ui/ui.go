@@ -25,6 +25,7 @@ const (
 	_msgUserLoginFailed     = "User wrong login/password"
 	_msgSecretAlreadyExists = "Secret already exists"
 	_msgSecretNotFound      = "Secret not found. Maybe it was removed in another session."
+	_msgSecretOutdated      = "Secret outdated. It was changed in another session."
 )
 
 // App represents user interface application.
