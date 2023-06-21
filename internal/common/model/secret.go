@@ -40,7 +40,7 @@ func (st SecretType) String() string {
 }
 
 func ValidSecretType(st SecretType) error {
-	switch SecretType(st) {
+	switch st {
 	case CredsSecret, TextSecret, BinarySecret, CardSecret:
 		return nil
 	default:

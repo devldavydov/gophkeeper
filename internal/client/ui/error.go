@@ -15,6 +15,7 @@ func (r *App) createErrorPage() {
 
 func (r *App) showError(errMsg string, fnCallback func()) {
 	r.frmError.GetFormItemByLabel("Message").(*tview.TextView).SetText(errMsg)
+	r.frmError.SetFocus(r.frmError.GetFormItemIndex("Message"))
 
 	btnBackInd := r.frmError.GetButtonIndex("Ok")
 	r.frmError.GetButton(btnBackInd).SetSelectedFunc(fnCallback)
