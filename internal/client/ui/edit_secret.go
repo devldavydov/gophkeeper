@@ -5,7 +5,9 @@ import (
 
 	"github.com/devldavydov/gophkeeper/internal/client/transport"
 	"github.com/devldavydov/gophkeeper/internal/common/model"
+	gkMsgp "github.com/devldavydov/gophkeeper/internal/common/msgp"
 	"github.com/rivo/tview"
+	"github.com/tinylib/msgp/msgp"
 )
 
 func (r *App) createEditUserSecretPage() {
@@ -125,7 +127,14 @@ func (r *App) doSaveSecret() {
 		)
 	}
 
-	err := r.tr.SecretUpdate(r.cltToken, curSecret.Name, updSecret, payload)
+	payloadRaw, err := gkMsgp.Serialize(payload.(msgp.Encodable))
+	if err != nil {
+		r.showError(_msgClientError, r.showCreateUserSecret)
+		return
+	}
+	updSecret.PayloadRaw = payloadRaw
+
+	err = r.tr.SecretUpdate(r.cltToken, curSecret.Name, updSecret)
 	if err != nil {
 		switch {
 		case errors.Is(err, transport.ErrInternalServerError):

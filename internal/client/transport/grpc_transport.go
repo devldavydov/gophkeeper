@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"github.com/devldavydov/gophkeeper/internal/common/model"
-	gkMsgp "github.com/devldavydov/gophkeeper/internal/common/msgp"
+
 	"github.com/devldavydov/gophkeeper/internal/common/nettools"
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
 	"github.com/devldavydov/gophkeeper/internal/common/token"
 	pb "github.com/devldavydov/gophkeeper/internal/grpc"
-	"github.com/tinylib/msgp/msgp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -148,26 +147,21 @@ func (gt *GrpcTransport) SecretGet(token, name string) (*model.Secret, error) {
 	}, nil
 }
 
-func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret, payload model.Payload) error {
+func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
-
-	payloadRaw, err := gkMsgp.Serialize(payload.(msgp.Encodable))
-	if err != nil {
-		return ErrInternalError
-	}
 
 	secretReq := &pb.SecretCreateRequest{
 		Secret: &pb.Secret{
 			Name:       secret.Name,
 			Meta:       secret.Meta,
 			Type:       pb.SecretType(secret.Type),
-			PayloadRaw: payloadRaw,
+			PayloadRaw: secret.PayloadRaw,
 			Version:    1,
 		},
 	}
 
-	_, err = gt.gClt.SecretCreate(contextWithToken(ctx, token), secretReq)
+	_, err := gt.gClt.SecretCreate(contextWithToken(ctx, token), secretReq)
 	if err != nil {
 		status, ok := status.FromError(err)
 		if !ok {
@@ -185,27 +179,18 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret, payloa
 	return nil
 }
 
-func (gt *GrpcTransport) SecretUpdate(
-	token, name string,
-	updSecret *model.SecretUpdate,
-	updPayload model.Payload,
-) error {
+func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.SecretUpdate) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
-
-	payloadRaw, err := gkMsgp.Serialize(updPayload.(msgp.Encodable))
-	if err != nil {
-		return ErrInternalError
-	}
 
 	updReq := &pb.SecretUpdateRequest{
 		Name:       name,
 		Meta:       updSecret.Meta,
 		Version:    updSecret.Version,
-		PayloadRaw: payloadRaw,
+		PayloadRaw: updSecret.PayloadRaw,
 	}
 
-	_, err = gt.gClt.SecretUpdate(contextWithToken(ctx, token), updReq)
+	_, err := gt.gClt.SecretUpdate(contextWithToken(ctx, token), updReq)
 	if err != nil {
 		status, ok := status.FromError(err)
 		if !ok {
