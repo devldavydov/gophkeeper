@@ -26,4 +26,5 @@ type Transport interface {
 	SecretGetList(token string) ([]model.SecretInfo, error)
 	SecretGet(token, name string) (*model.Secret, error)
 	SecretCreate(token string, secret *model.Secret, payload model.Payload) error
+	SecretDelete(token, name string) error
 }

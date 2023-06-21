@@ -37,6 +37,7 @@ func (r *App) createCreateUserSecretPage() {
 
 func (r *App) showCreateUserSecret() {
 	r.frmCreateUserSecret.GetFormItemByLabel("Type").(*tview.DropDown).SetCurrentOption(0)
+	r.frmCreateUserSecret.SetFocus(r.frmCreateUser.GetFormItemIndex("Type"))
 	r.frmCreateUserSecret.GetFormItemByLabel("Name").(*tview.InputField).SetText("")
 	r.frmCreateUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).SetText("", true)
 	r.uiPages.SwitchToPage(_pageCreateUserSecret)

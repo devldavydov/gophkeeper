@@ -185,6 +185,18 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret, payloa
 	return nil
 }
 
+func (gt *GrpcTransport) SecretDelete(token, name string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
+	defer cancel()
+
+	_, err := gt.gClt.SecretDelete(contextWithToken(ctx, token), &pb.SecretDeleteRequest{Name: name})
+	if err != nil {
+		return ErrInternalServerError
+	}
+
+	return nil
+}
+
 func contextWithToken(ctx context.Context, cltToken string) context.Context {
 	md := metadata.New(map[string]string{token.HeaderName: cltToken})
 	return metadata.NewOutgoingContext(ctx, md)

@@ -16,7 +16,7 @@ func (r *App) createEditUserSecretPage() {
 		AddInputField("Name", "", 0, nil, nil).
 		AddTextArea("Meta", "", 0, 3, 0, nil).
 		AddButton("Save", nil).
-		AddButton("Delete", nil).
+		AddButton("Delete", r.doDeleteUserSecret).
 		AddButton("Back to list", r.doReloadUserSecrets)
 	r.frmCreateUserSecret.
 		SetBorder(true).
@@ -82,4 +82,14 @@ func (r *App) doEditUserSecret() {
 	}
 
 	r.showEditUserSecretPage(secret)
+}
+
+func (r *App) doDeleteUserSecret() {
+	secretName := r.frmEditUserSecret.GetFormItemByLabel("Name").(*tview.InputField).GetText()
+	if err := r.tr.SecretDelete(r.cltToken, secretName); err != nil {
+		r.showError(_msgInternalServerError, r.doReloadUserSecrets)
+		return
+	}
+
+	r.doReloadUserSecrets()
 }
