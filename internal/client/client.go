@@ -4,23 +4,18 @@ package client
 import (
 	"context"
 	"fmt"
-	"time"
 
+	"github.com/devldavydov/gophkeeper/internal/client/transport"
 	"github.com/devldavydov/gophkeeper/internal/common/model"
-	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
-	pb "github.com/devldavydov/gophkeeper/internal/grpc"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
-
-const _serverRequestTimeout = 15 * time.Second
 
 // Client represents client application.
 type Client struct {
 	settings   *Settings
 	logger     *logrus.Logger
-	gClt       pb.GophKeeperServiceClient
+	tr         transport.Transport
 	cltToken   string
 	lstSecrets []model.SecretInfo
 	//
@@ -42,8 +37,8 @@ func NewClient(settngs *Settings, logger *logrus.Logger) *Client {
 func (r *Client) Start(ctx context.Context) error {
 	var err error
 
-	// Create gRPC client
-	r.gClt, err = r.createGrpcClient()
+	// Create Transport
+	r.tr, err = transport.NewGrpcTransport(r.settings.ServerAddress, r.settings.TLSCACertPath)
 	if err != nil {
 		return err
 	}
@@ -69,18 +64,4 @@ func (r *Client) Start(ctx context.Context) error {
 		r.logger.Info("client application finished")
 		return nil
 	}
-}
-
-func (r *Client) createGrpcClient() (pb.GophKeeperServiceClient, error) {
-	tlsCredentials, err := gkTLS.LoadCACert(r.settings.TLSCACertPath, "")
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := grpc.Dial(r.settings.ServerAddress.String(), grpc.WithTransportCredentials(tlsCredentials))
-	if err != nil {
-		return nil, err
-	}
-
-	return pb.NewGophKeeperServiceClient(conn), nil
 }
