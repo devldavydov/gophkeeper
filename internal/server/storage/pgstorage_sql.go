@@ -69,4 +69,9 @@ const (
 		SET meta = $3, version = $4, payload_raw = $5
 		WHERE user_id = $1 AND name = $2;
 		`
+	_sqlUpdateSecretWithoutPayload = `
+	UPDATE secrets
+	SET meta = $3, version = $4
+	WHERE user_id = $1 AND name = $2;
+	`
 )

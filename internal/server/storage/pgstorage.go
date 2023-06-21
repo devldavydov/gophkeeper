@@ -191,7 +191,11 @@ func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string
 	}
 
 	// Update
-	_, err = tx.ExecContext(ctx, _sqlUpdateSecret, userID, name, update.Meta, update.Version, update.PayloadRaw)
+	if update.UpdatePayload {
+		_, err = tx.ExecContext(ctx, _sqlUpdateSecret, userID, name, update.Meta, update.Version, update.PayloadRaw)
+	} else {
+		_, err = tx.ExecContext(ctx, _sqlUpdateSecretWithoutPayload, userID, name, update.Meta, update.Version)
+	}
 	if err != nil {
 		return err
 	}

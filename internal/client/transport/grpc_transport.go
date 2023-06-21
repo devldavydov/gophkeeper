@@ -31,7 +31,14 @@ func NewGrpcTransport(serverAddress *nettools.Address, tlsCACertPath string) (*G
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(serverAddress.String(), grpc.WithTransportCredentials(tlsCredentials))
+	conn, err := grpc.Dial(
+		serverAddress.String(),
+		grpc.WithTransportCredentials(tlsCredentials),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(model.MaxPayloadSizeBytes+1024),
+			grpc.MaxCallSendMsgSize(model.MaxPayloadSizeBytes+1024),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +178,8 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error 
 		switch status.Code() { //nolint:exhaustive // OK
 		case codes.AlreadyExists:
 			return ErrSecretAlreadyExists
+		case codes.ResourceExhausted:
+			return ErrSecretPayloadSizeExceeded
 		default:
 			return ErrInternalServerError
 		}
@@ -184,10 +193,11 @@ func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.Secre
 	defer cancel()
 
 	updReq := &pb.SecretUpdateRequest{
-		Name:       name,
-		Meta:       updSecret.Meta,
-		Version:    updSecret.Version,
-		PayloadRaw: updSecret.PayloadRaw,
+		Name:          name,
+		Meta:          updSecret.Meta,
+		Version:       updSecret.Version,
+		PayloadRaw:    updSecret.PayloadRaw,
+		UpdatePayload: updSecret.UpdatePayload,
 	}
 
 	_, err := gt.gClt.SecretUpdate(contextWithToken(ctx, token), updReq)

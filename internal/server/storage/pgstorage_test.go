@@ -210,7 +210,8 @@ func (pg *PgStorageSuite) TestUpdateSecret() {
 		pg.ErrorIs(err, ErrSecretNotFound)
 	})
 
-	updData := &model.SecretUpdate{Meta: "Upd", Version: 2, PayloadRaw: []byte("updated")}
+	//
+	updData := &model.SecretUpdate{Meta: "Upd", Version: 2, PayloadRaw: []byte("updated"), UpdatePayload: true}
 	pg.Run("update secret", func() {
 		pg.NoError(pg.stg.UpdateSecret(ctx, userID, secretName, updData))
 	})
@@ -225,6 +226,23 @@ func (pg *PgStorageSuite) TestUpdateSecret() {
 		pg.Equal(updData.PayloadRaw, updSecret.PayloadRaw)
 	})
 
+	//
+	updData2 := &model.SecretUpdate{Meta: "Upd2", Version: 3, UpdatePayload: false}
+	pg.Run("update secret without payload", func() {
+		pg.NoError(pg.stg.UpdateSecret(ctx, userID, secretName, updData2))
+	})
+
+	pg.Run("get updated secret", func() {
+		updSecret, err := pg.stg.GetSecret(ctx, userID, secretName)
+		pg.NoError(err)
+		pg.NotEqual(initSecret, updSecret)
+
+		pg.Equal(updData2.Meta, updSecret.Meta)
+		pg.Equal(updData2.Version, updSecret.Version)
+		pg.Equal(updData.PayloadRaw, updSecret.PayloadRaw)
+	})
+
+	//
 	pg.Run("update with wrong version", func() {
 		updData.Version = 1
 		err := pg.stg.UpdateSecret(ctx, userID, secretName, updData)

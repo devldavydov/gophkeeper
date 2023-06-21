@@ -2,6 +2,8 @@ package ui
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/devldavydov/gophkeeper/internal/client/transport"
 	"github.com/devldavydov/gophkeeper/internal/common/model"
@@ -19,7 +21,7 @@ func (r *App) createEditUserSecretPage() {
 		AddButton("Save", r.doSaveSecret).
 		AddButton("Delete", r.doDeleteUserSecret).
 		AddButton("Back to list", r.doReloadUserSecrets)
-	r.frmCreateUserSecret.
+	r.frmEditUserSecret.
 		SetBorder(true).
 		SetTitle("Edit secret")
 
@@ -29,7 +31,7 @@ func (r *App) createEditUserSecretPage() {
 	r.uiPages.AddPage(_pageEditUserSecret, uiCenteredWidget(r.frmEditUserSecret, 0, 10), true, false)
 }
 
-func (r *App) showEditUserSecretPage(secret *model.Secret) {
+func (r *App) showEditUserSecretPageClear(secret *model.Secret) {
 	payload, err := secret.GetPayload()
 	if err != nil {
 		r.showError(_msgClientError, r.doReloadUserSecrets)
@@ -41,6 +43,10 @@ func (r *App) showEditUserSecretPage(secret *model.Secret) {
 		r.frmEditUserSecret.RemoveFormItem(i)
 		i--
 	}
+	if btnIndex := r.frmEditUserSecret.GetButtonIndex("Copy file"); btnIndex != -1 {
+		r.frmEditUserSecret.RemoveButton(btnIndex)
+	}
+	r.frmEditUserSecret.SetFocus(metaIndex)
 
 	r.frmEditUserSecret.GetFormItemByLabel("Type").(*tview.InputField).SetText(secret.Type.String())
 	r.frmEditUserSecret.GetFormItemByLabel("Name").(*tview.InputField).SetText(secret.Name)
@@ -55,8 +61,19 @@ func (r *App) showEditUserSecretPage(secret *model.Secret) {
 		text, _ := payload.(*model.TextPayload)
 		r.frmEditUserSecret.AddTextArea("Text", text.Data, 0, 3, 0, nil)
 	case model.BinarySecret:
+		r.frmEditUserSecret.AddInputField("File path", "", 0, nil, nil)
+
 		bin, _ := payload.(*model.BinaryPayload)
-		r.frmEditUserSecret.AddTextArea("Binary", string(bin.Data), 0, 3, 0, nil)
+		saveName := fmt.Sprintf("/tmp/GophKeeper_%s", secret.Name)
+		r.frmEditUserSecret.AddButton("Copy file", func() {
+			var msg string
+			if err = os.WriteFile(saveName, bin.Data, 0600); err != nil {
+				msg = fmt.Sprintf("File copy error: %v", err)
+			} else {
+				msg = fmt.Sprintf("File copied: %s", saveName)
+			}
+			r.showError(msg, r.showEditUserSecretPage)
+		})
 	case model.CardSecret:
 		card, _ := payload.(*model.CardPayload)
 		r.frmEditUserSecret.
@@ -66,6 +83,10 @@ func (r *App) showEditUserSecretPage(secret *model.Secret) {
 			AddInputField("CVV", card.CVV, 0, nil, nil)
 	}
 
+	r.uiPages.SwitchToPage(_pageEditUserSecret)
+}
+
+func (r *App) showEditUserSecretPage() {
 	r.uiPages.SwitchToPage(_pageEditUserSecret)
 }
 
@@ -82,7 +103,7 @@ func (r *App) doEditUserSecret() {
 		return
 	}
 
-	r.showEditUserSecretPage(secret)
+	r.showEditUserSecretPageClear(secret)
 }
 
 func (r *App) doDeleteUserSecret() {
@@ -99,8 +120,9 @@ func (r *App) doSaveSecret() {
 	curSecret := r.lstSecrets[r.wdgLstSecrets.GetCurrentItem()]
 
 	updSecret := &model.SecretUpdate{
-		Meta:    r.frmEditUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).GetText(),
-		Version: curSecret.Version + 1,
+		Meta:          r.frmEditUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).GetText(),
+		Version:       curSecret.Version + 1,
+		UpdatePayload: true,
 	}
 
 	var payload model.Payload
@@ -115,9 +137,16 @@ func (r *App) doSaveSecret() {
 			r.frmEditUserSecret.GetFormItemByLabel("Text").(*tview.TextArea).GetText(),
 		)
 	case model.BinarySecret:
-		payload = model.NewBinaryPayload([]byte(
-			r.frmEditUserSecret.GetFormItemByLabel("Binary").(*tview.TextArea).GetText(),
-		))
+		filePath := r.frmEditUserSecret.GetFormItemByLabel("File path").(*tview.InputField).GetText()
+		// Save new file payload, only if path set
+		if filePath != "" {
+			fileData, err := os.ReadFile(filePath)
+			if err != nil {
+				r.showError(fmt.Sprintf("File read error: %v", err), r.showEditUserSecretPage)
+				return
+			}
+			payload = model.NewBinaryPayload(fileData)
+		}
 	case model.CardSecret:
 		payload = model.NewCardPayload(
 			r.frmEditUserSecret.GetFormItemByLabel("Card number").(*tview.InputField).GetText(),
@@ -127,12 +156,18 @@ func (r *App) doSaveSecret() {
 		)
 	}
 
-	payloadRaw, err := gkMsgp.Serialize(payload.(msgp.Encodable))
-	if err != nil {
-		r.showError(_msgClientError, r.showCreateUserSecret)
-		return
+	var err error
+	if payload != nil {
+		var payloadRaw []byte
+		payloadRaw, err = gkMsgp.Serialize(payload.(msgp.Encodable))
+		if err != nil {
+			r.showError(_msgClientError, r.showEditUserSecretPage)
+			return
+		}
+		updSecret.PayloadRaw = payloadRaw
+	} else {
+		updSecret.UpdatePayload = false
 	}
-	updSecret.PayloadRaw = payloadRaw
 
 	err = r.tr.SecretUpdate(r.cltToken, curSecret.Name, updSecret)
 	if err != nil {

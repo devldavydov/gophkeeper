@@ -17,15 +17,16 @@ const (
 	_pageEditUserSecret   = "edit user secret"
 	_pageError            = "error"
 
-	_msgInternalServerError = "Internal server error"
-	_msgClientError         = "Internal client error"
-	_msgUserAlreadyExists   = "User already exists"
-	_msgUserInvalidCreds    = "User invalid credentials"
-	_msgUserNotFound        = "User not found"
-	_msgUserLoginFailed     = "User wrong login/password"
-	_msgSecretAlreadyExists = "Secret already exists"
-	_msgSecretNotFound      = "Secret not found. Maybe it was removed in another session."
-	_msgSecretOutdated      = "Secret outdated. It was changed in another session."
+	_msgInternalServerError       = "Internal server error"
+	_msgClientError               = "Internal client error"
+	_msgUserAlreadyExists         = "User already exists"
+	_msgUserInvalidCreds          = "User invalid credentials"
+	_msgUserNotFound              = "User not found"
+	_msgUserLoginFailed           = "User wrong login/password"
+	_msgSecretAlreadyExists       = "Secret already exists"
+	_msgSecretNotFound            = "Secret not found. Maybe it was removed in another session."
+	_msgSecretOutdated            = "Secret outdated. It was changed in another session."
+	_msgSecretPayloadSizeExceeded = "Secret payload too big"
 )
 
 // App represents user interface application.

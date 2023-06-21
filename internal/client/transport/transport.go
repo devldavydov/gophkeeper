@@ -8,15 +8,16 @@ import (
 )
 
 var (
-	ErrInternalServerError    = errors.New("internal server error")
-	ErrInternalError          = errors.New("internal error")
-	ErrUserAlreadyExists      = errors.New("user already exists")
-	ErrUserInvalidCredentials = errors.New("user invalid credentials")
-	ErrUserNotFound           = errors.New("user not found")
-	ErrUserLoginFailed        = errors.New("user wrong login/password")
-	ErrSecretAlreadyExists    = errors.New("secret already exists")
-	ErrSecretNotFound         = errors.New("secret not found")
-	ErrSecretOutdated         = errors.New("secret outdated")
+	ErrInternalServerError       = errors.New("internal server error")
+	ErrInternalError             = errors.New("internal error")
+	ErrUserAlreadyExists         = errors.New("user already exists")
+	ErrUserInvalidCredentials    = errors.New("user invalid credentials")
+	ErrUserNotFound              = errors.New("user not found")
+	ErrUserLoginFailed           = errors.New("user wrong login/password")
+	ErrSecretAlreadyExists       = errors.New("secret already exists")
+	ErrSecretNotFound            = errors.New("secret not found")
+	ErrSecretOutdated            = errors.New("secret outdated")
+	ErrSecretPayloadSizeExceeded = errors.New("secret payload size exceeded")
 )
 
 // Transport is an interface to connect with server.

@@ -222,11 +222,21 @@ func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
 	token := gs.createTestUser(ctx)
 
 	for _, tt := range []struct {
-		name   string
-		secret *pb.Secret
+		name      string
+		secret    *pb.Secret
+		checkCode codes.Code
 	}{
-		{name: "invalid type", secret: &pb.Secret{Type: 100}},
-		{name: "empty name", secret: &pb.Secret{Type: pb.SecretType_BINARY}},
+		{name: "invalid type", secret: &pb.Secret{Type: 100}, checkCode: codes.InvalidArgument},
+		{name: "empty name", secret: &pb.Secret{Type: pb.SecretType_BINARY}, checkCode: codes.InvalidArgument},
+		{
+			name: "payload size exceeded",
+			secret: &pb.Secret{
+				Type:       pb.SecretType_BINARY,
+				Name:       "Test",
+				PayloadRaw: make([]byte, model.MaxPayloadSizeBytes+1),
+			},
+			checkCode: codes.ResourceExhausted,
+		},
 	} {
 		tt := tt
 		gs.Run(tt.name, func() {
@@ -234,7 +244,7 @@ func (gs *GrpcServerSuite) TestSecretCreateFailedValidation() {
 			gs.Error(err)
 			status, ok := status.FromError(err)
 			gs.True(ok)
-			gs.Equal(codes.InvalidArgument, status.Code())
+			gs.Equal(tt.checkCode, status.Code())
 		})
 	}
 }
@@ -285,10 +295,11 @@ func (gs *GrpcServerSuite) TestSecretUpdate() {
 	gs.NoError(err)
 
 	updRequest := &pb.SecretUpdateRequest{
-		Name:       secretName,
-		Version:    2,
-		Meta:       "new meta",
-		PayloadRaw: updPayloadRaw,
+		Name:          secretName,
+		Version:       2,
+		Meta:          "new meta",
+		PayloadRaw:    updPayloadRaw,
+		UpdatePayload: true,
 	}
 
 	gs.Run("update secret", func() {
@@ -306,6 +317,35 @@ func (gs *GrpcServerSuite) TestSecretUpdate() {
 		gs.Equal(resSecret.Type, secret.Type)
 		gs.Equal(resSecret.Meta, updRequest.Meta)
 		gs.Equal(resSecret.Version, updRequest.Version)
+
+		resPayload := &model.CredsPayload{}
+		gs.NoError(gkMsgp.Deserialize(resSecret.PayloadRaw, resPayload))
+		gs.Equal(updCredsPayload, resPayload)
+	})
+
+	// Update secret without payload
+	updRequest2 := &pb.SecretUpdateRequest{
+		Name:          secretName,
+		Version:       3,
+		Meta:          "new meta2",
+		UpdatePayload: false,
+	}
+
+	gs.Run("update secret without payload", func() {
+		_, err = gs.testClt.SecretUpdate(contextWithToken(ctx, token), updRequest2)
+		gs.NoError(err)
+	})
+
+	// Check after update
+	gs.Run("get updated", func() {
+		var resSecret *pb.Secret
+		resSecret, err = gs.testClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: secretName})
+		gs.NoError(err)
+
+		gs.Equal(resSecret.Name, secretName)
+		gs.Equal(resSecret.Type, secret.Type)
+		gs.Equal(resSecret.Meta, updRequest2.Meta)
+		gs.Equal(resSecret.Version, updRequest2.Version)
 
 		resPayload := &model.CredsPayload{}
 		gs.NoError(gkMsgp.Deserialize(resSecret.PayloadRaw, resPayload))
@@ -399,7 +439,12 @@ func (gs *GrpcServerSuite) createTestServer() {
 		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
 			return lis.Dial()
 		}),
-		grpc.WithTransportCredentials(cltCredentials))
+		grpc.WithTransportCredentials(cltCredentials),
+		grpc.WithDefaultCallOptions(
+			grpc.MaxCallRecvMsgSize(model.MaxPayloadSizeBytes+1024),
+			grpc.MaxCallSendMsgSize(model.MaxPayloadSizeBytes+1024),
+		),
+	)
 	require.NoError(gs.T(), err)
 
 	gs.fTeardown = func() {

@@ -15,7 +15,7 @@ func (r *App) createUserSecretsPage() {
 
 	formActions := tview.NewForm().
 		AddTextView("User", "", 30, 1, false, false).
-		AddButton("Create secret", r.showCreateUserSecret).
+		AddButton("Create secret", r.showCreateUserSecretCleared).
 		AddButton("Reload", r.doReloadUserSecrets).
 		AddButton("Logout", r.showLogin)
 	r.wdgUser, _ = formActions.GetFormItemByLabel("User").(*tview.TextView)

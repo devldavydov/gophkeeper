@@ -37,15 +37,16 @@ const (
 	_msgUserNotFound               = "user not found"
 	_msgUserFailedToLogin          = "failed to login"
 	//
-	_msgSecretsNotFound      = "secrets not found" //nolint:gosec // Ok
-	_msgSecretsFailedToGet   = "failed to get secrets"
-	_msgSecretBadRequest     = "invalid secret"
-	_msgSecretFailedToCreate = "failed to create secret"
-	_msgSecretAlreadyExists  = "secret already exists"
-	_msgSecretNotFound       = "secret not found"
-	_msgSecretFailedToDelete = "failed to delete secret"
-	_msgSecretFailedToUpdate = "failed to update secret"
-	_msgSecretOutdated       = "secret outdated"
+	_msgSecretsNotFound           = "secrets not found" //nolint:gosec // Ok
+	_msgSecretsFailedToGet        = "failed to get secrets"
+	_msgSecretBadRequest          = "invalid secret"
+	_msgSecretFailedToCreate      = "failed to create secret"
+	_msgSecretAlreadyExists       = "secret already exists"
+	_msgSecretNotFound            = "secret not found"
+	_msgSecretFailedToDelete      = "failed to delete secret"
+	_msgSecretFailedToUpdate      = "failed to update secret"
+	_msgSecretOutdated            = "secret outdated"
+	_msgSecretPayloadSizeExceeded = "secret payload size exceeded"
 )
 
 // GrpcServer represents gRPC server.
@@ -75,6 +76,8 @@ func NewGrpcServer(
 					pb.GophKeeperService_Ping_FullMethodName,
 				},
 				serverSecret).Handle),
+		grpc.MaxRecvMsgSize(model.MaxPayloadSizeBytes + 1024),
+		grpc.MaxSendMsgSize(model.MaxPayloadSizeBytes + 1024),
 	}
 
 	opts = append([]grpc.ServerOption{grpc.Creds(tlsCredentials)}, opts...)
@@ -221,6 +224,12 @@ func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateReques
 		return nil, status.Error(codes.InvalidArgument, _msgSecretBadRequest)
 	}
 
+	if len(in.Secret.PayloadRaw) > model.MaxPayloadSizeBytes {
+		g.logger.Errorf(
+			"[user=%d] secret payload size (%d) exceed limit (%d)", userID, len(in.Secret.PayloadRaw), model.MaxPayloadSizeBytes)
+		return nil, status.Error(codes.ResourceExhausted, _msgSecretPayloadSizeExceeded)
+	}
+
 	// Encrypt payload
 	encPayload, err := cipher.AESEncrpyt(in.Secret.PayloadRaw, g.serverSecret)
 	if err != nil {
@@ -258,17 +267,21 @@ func (g *GrpcServer) SecretUpdate(ctx context.Context, in *pb.SecretUpdateReques
 	}
 
 	// Encrypt payload
-	encPayload, err := cipher.AESEncrpyt(in.PayloadRaw, g.serverSecret)
-	if err != nil {
-		g.logger.Errorf("[user=%d] secret [%s] update error: encrypt payload error: %v", userID, in.Name, err)
-		return nil, status.Error(codes.Internal, _msgSecretFailedToUpdate)
+	var encPayload []byte
+	if in.UpdatePayload {
+		encPayload, err = cipher.AESEncrpyt(in.PayloadRaw, g.serverSecret)
+		if err != nil {
+			g.logger.Errorf("[user=%d] secret [%s] update error: encrypt payload error: %v", userID, in.Name, err)
+			return nil, status.Error(codes.Internal, _msgSecretFailedToUpdate)
+		}
 	}
 
 	// Update secret
 	updSecret := &model.SecretUpdate{
-		Meta:       in.Meta,
-		Version:    in.Version,
-		PayloadRaw: encPayload,
+		Meta:          in.Meta,
+		Version:       in.Version,
+		PayloadRaw:    encPayload,
+		UpdatePayload: in.UpdatePayload,
 	}
 	err = g.stg.UpdateSecret(ctx, userID, in.Name, updSecret)
 	if err != nil {

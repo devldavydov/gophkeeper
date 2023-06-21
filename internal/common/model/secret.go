@@ -64,11 +64,12 @@ type SecretInfo struct {
 	Version int64
 }
 
-// SecretInfo represents Secret fields to update.
+// SecretUpdate represents Secret fields to update.
 type SecretUpdate struct {
-	Meta       string
-	Version    int64
-	PayloadRaw []byte
+	Meta          string
+	Version       int64
+	PayloadRaw    []byte
+	UpdatePayload bool
 }
 
 // GetPayload returns Payload from binary raw.

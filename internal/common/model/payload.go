@@ -7,6 +7,8 @@ import (
 	"fmt"
 )
 
+const MaxPayloadSizeBytes = 10 * 1024 * 1024
+
 // Payload interface represents secret valuable information.
 type Payload interface {
 	fmt.Stringer

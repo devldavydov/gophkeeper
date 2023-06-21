@@ -2,6 +2,8 @@ package ui
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/devldavydov/gophkeeper/internal/client/transport"
 	"github.com/devldavydov/gophkeeper/internal/common/model"
@@ -36,11 +38,15 @@ func (r *App) createCreateUserSecretPage() {
 	r.uiPages.AddPage(_pageCreateUserSecret, uiCenteredWidget(r.frmCreateUserSecret, 0, 10), true, false)
 }
 
-func (r *App) showCreateUserSecret() {
+func (r *App) showCreateUserSecretCleared() {
 	r.frmCreateUserSecret.GetFormItemByLabel("Type").(*tview.DropDown).SetCurrentOption(0)
 	r.frmCreateUserSecret.SetFocus(r.frmCreateUser.GetFormItemIndex("Type"))
 	r.frmCreateUserSecret.GetFormItemByLabel("Name").(*tview.InputField).SetText("")
 	r.frmCreateUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).SetText("", true)
+	r.uiPages.SwitchToPage(_pageCreateUserSecret)
+}
+
+func (r *App) showCreateUserSecret() {
 	r.uiPages.SwitchToPage(_pageCreateUserSecret)
 }
 
@@ -49,9 +55,22 @@ func (r *App) doCreateUserSecret() {
 		Name: r.frmCreateUserSecret.GetFormItemByLabel("Name").(*tview.InputField).GetText(),
 		Meta: r.frmCreateUserSecret.GetFormItemByLabel("Meta").(*tview.TextArea).GetText(),
 	}
-	var payload model.Payload
-
 	_, fType := r.frmCreateUserSecret.GetFormItemByLabel("Type").(*tview.DropDown).GetCurrentOption()
+
+	if secret.Name == "" {
+		r.showError("Empty name", func() {
+			r.uiPages.SwitchToPage(_pageCreateUserSecret)
+		})
+		return
+	}
+	if fType == "" {
+		r.showError("Empty type", func() {
+			r.uiPages.SwitchToPage(_pageCreateUserSecret)
+		})
+		return
+	}
+
+	var payload model.Payload
 
 	switch fType {
 	case model.CredsSecret.String():
@@ -67,9 +86,12 @@ func (r *App) doCreateUserSecret() {
 		)
 	case model.BinarySecret.String():
 		secret.Type = model.BinarySecret
-		payload = model.NewBinaryPayload([]byte(
-			r.frmCreateUserSecret.GetFormItemByLabel("Binary").(*tview.TextArea).GetText(),
-		))
+		fileData, err := os.ReadFile(r.frmCreateUserSecret.GetFormItemByLabel("File path").(*tview.InputField).GetText())
+		if err != nil {
+			r.showError(fmt.Sprintf("File read error: %v", err), r.showCreateUserSecret)
+			return
+		}
+		payload = model.NewBinaryPayload(fileData)
 	case model.CardSecret.String():
 		secret.Type = model.CardSecret
 		payload = model.NewCardPayload(
@@ -82,7 +104,7 @@ func (r *App) doCreateUserSecret() {
 
 	payloadRaw, err := gkMsgp.Serialize(payload.(msgp.Encodable))
 	if err != nil {
-		r.showError(_msgClientError, r.showCreateUserSecret)
+		r.showError(_msgClientError, r.showCreateUserSecretCleared)
 		return
 	}
 	secret.PayloadRaw = payloadRaw
@@ -96,6 +118,8 @@ func (r *App) doCreateUserSecret() {
 			r.showError(_msgClientError, r.showCreateUserSecret)
 		case errors.Is(err, transport.ErrInternalServerError):
 			r.showError(_msgInternalServerError, r.showCreateUserSecret)
+		case errors.Is(err, transport.ErrSecretPayloadSizeExceeded):
+			r.showError(_msgSecretPayloadSizeExceeded, r.showCreateUserSecret)
 		}
 		return
 	}
@@ -121,7 +145,7 @@ func (r *App) uiChangeSecretPayloadFields(choosenType string, _ int) {
 			AddTextArea("Text", "", 0, 3, 0, nil)
 	case model.BinarySecret.String():
 		r.frmCreateUserSecret.
-			AddTextArea("Binary", "", 0, 3, 0, nil)
+			AddInputField("File path", "", 0, nil, nil)
 	case model.CardSecret.String():
 		r.frmCreateUserSecret.
 			AddInputField("Card number", "", 0, nil, nil).
