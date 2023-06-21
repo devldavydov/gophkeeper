@@ -101,6 +101,7 @@ func (gt *GrpcTransport) SecretGetList(token string) ([]model.SecretInfo, error)
 
 		switch status.Code() { //nolint:exhaustive // OK
 		case codes.NotFound:
+			return make([]model.SecretInfo, 0), nil
 		default:
 			return nil, ErrInternalServerError
 		}
