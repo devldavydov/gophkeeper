@@ -71,6 +71,11 @@ gen_proto:
 	@protoc --go_out=. --go_opt=paths=import --go-grpc_out=. --go-grpc_opt=paths=import internal/grpc/proto/secret.proto
 	@protoc --go_out=. --go_opt=paths=import --go-grpc_out=. --go-grpc_opt=paths=import internal/grpc/proto/service.proto
 
+.PHONY: gen_mock
+gen_mock:
+	@echo "\n### $@"
+	@mockgen -destination=internal/grpc/mocks/mock_service_client.go -package=mocks github.com/devldavydov/gophkeeper/internal/grpc GophKeeperServiceClient
+
 .PHONY: clean
 clean:
 	@echo "\n### $@"

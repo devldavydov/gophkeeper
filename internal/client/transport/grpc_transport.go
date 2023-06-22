@@ -43,7 +43,11 @@ func NewGrpcTransport(serverAddress *nettools.Address, tlsCACertPath string) (*G
 		return nil, err
 	}
 
-	return &GrpcTransport{gClt: pb.NewGophKeeperServiceClient(conn)}, nil
+	return newGrpcTransport(pb.NewGophKeeperServiceClient(conn)), nil
+}
+
+func newGrpcTransport(clt pb.GophKeeperServiceClient) *GrpcTransport {
+	return &GrpcTransport{gClt: clt}
 }
 
 func (gt *GrpcTransport) UserCreate(userLogin, userPassword string) (string, error) {
