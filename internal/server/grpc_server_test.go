@@ -361,6 +361,16 @@ func (gs *GrpcServerSuite) TestSecretUpdate() {
 		gs.True(ok)
 		gs.Equal(codes.FailedPrecondition, status.Code())
 	})
+
+	// Update with wrong version
+	updRequest.Version = 100
+	gs.Run("update wrong secret version", func() {
+		_, err = gs.testClt.SecretUpdate(contextWithToken(ctx, token), updRequest)
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.InvalidArgument, status.Code())
+	})
 }
 
 func (gs *GrpcServerSuite) TestSecretDelete() {

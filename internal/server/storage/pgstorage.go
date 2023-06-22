@@ -26,6 +26,7 @@ var (
 	ErrSecretNotFound      = errors.New("secret not found")
 	ErrNoSecrets           = errors.New("no secrets")
 	ErrSecretOutdated      = errors.New("secret outdated")
+	ErrSecretWrongVersion  = errors.New("secret wrong version")
 )
 
 // PgStorage is a Storage implementation for PostgreSQL database.
@@ -186,8 +187,11 @@ func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string
 	}
 
 	// Check version
-	if curVersion >= update.Version {
+	switch {
+	case update.Version <= curVersion:
 		return ErrSecretOutdated
+	case update.Version-curVersion > 1:
+		return ErrSecretWrongVersion
 	}
 
 	// Update

@@ -120,6 +120,8 @@ func (r *App) doCreateUserSecret() {
 			r.showError(_msgInternalServerError, r.showCreateUserSecret)
 		case errors.Is(err, transport.ErrSecretPayloadSizeExceeded):
 			r.showError(_msgSecretPayloadSizeExceeded, r.showCreateUserSecret)
+		case errors.Is(err, transport.ErrSecretInvalid):
+			r.showError(_msgSecretInvalid, r.showCreateUserSecret)
 		}
 		return
 	}

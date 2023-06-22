@@ -18,6 +18,7 @@ var (
 	ErrSecretNotFound            = errors.New("secret not found")
 	ErrSecretOutdated            = errors.New("secret outdated")
 	ErrSecretPayloadSizeExceeded = errors.New("secret payload size exceeded")
+	ErrSecretInvalid             = errors.New("invalid secret")
 )
 
 // Transport is an interface to connect with server.

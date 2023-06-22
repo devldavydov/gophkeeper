@@ -180,6 +180,8 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error 
 			return ErrSecretAlreadyExists
 		case codes.ResourceExhausted:
 			return ErrSecretPayloadSizeExceeded
+		case codes.InvalidArgument:
+			return ErrSecretInvalid
 		default:
 			return ErrInternalServerError
 		}

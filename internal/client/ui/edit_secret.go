@@ -179,6 +179,8 @@ func (r *App) doSaveSecret() {
 			r.showError(_msgSecretNotFound, r.doReloadUserSecrets)
 		case errors.Is(err, transport.ErrSecretOutdated):
 			r.showError(_msgSecretOutdated, r.doReloadUserSecrets)
+		case errors.Is(err, transport.ErrSecretInvalid):
+			r.showError(_msgSecretInvalid, r.showEditUserSecretPage)
 		}
 		return
 	}

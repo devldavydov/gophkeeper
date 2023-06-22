@@ -294,6 +294,9 @@ func (g *GrpcServer) SecretUpdate(ctx context.Context, in *pb.SecretUpdateReques
 		case errors.Is(err, storage.ErrSecretOutdated):
 			g.logger.Errorf("[user=%d] secret [%s] update error: secret outdated", userID, in.Name)
 			return nil, status.Error(codes.FailedPrecondition, _msgSecretOutdated)
+		case errors.Is(err, storage.ErrSecretWrongVersion):
+			g.logger.Errorf("[user=%d] secret [%s] update error: secret wrong version", userID, in.Name)
+			return nil, status.Error(codes.InvalidArgument, _msgSecretBadRequest)
 		default:
 			g.logger.Errorf("[user=%d] secret [%s] update error: %v", userID, in.Name, err)
 			errStatus = status.Error(codes.Internal, _msgSecretFailedToUpdate)

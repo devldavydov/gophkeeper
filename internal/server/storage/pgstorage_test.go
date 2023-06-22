@@ -243,10 +243,16 @@ func (pg *PgStorageSuite) TestUpdateSecret() {
 	})
 
 	//
-	pg.Run("update with wrong version", func() {
+	pg.Run("update with outdate version", func() {
 		updData.Version = 1
 		err := pg.stg.UpdateSecret(ctx, userID, secretName, updData)
 		pg.ErrorIs(err, ErrSecretOutdated)
+	})
+
+	pg.Run("update with wrong version", func() {
+		updData.Version = 100
+		err := pg.stg.UpdateSecret(ctx, userID, secretName, updData)
+		pg.ErrorIs(err, ErrSecretWrongVersion)
 	})
 }
 

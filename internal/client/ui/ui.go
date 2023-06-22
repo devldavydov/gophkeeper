@@ -26,6 +26,7 @@ const (
 	_msgSecretAlreadyExists       = "Secret already exists"
 	_msgSecretNotFound            = "Secret not found. Maybe it was removed in another session."
 	_msgSecretOutdated            = "Secret outdated. It was changed in another session."
+	_msgSecretInvalid             = "Secret invalid"
 	_msgSecretPayloadSizeExceeded = "Secret payload too big"
 )
 
