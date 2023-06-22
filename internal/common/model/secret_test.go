@@ -11,6 +11,7 @@ import (
 
 func TestSecretTypeString(t *testing.T) {
 	assert.Equal(t, "Unknown", SecretType(100).String())
+	assert.Equal(t, "Unknown", UnknownSecret.String())
 	assert.Equal(t, "Credentials", CredsSecret.String())
 	assert.Equal(t, "Text", TextSecret.String())
 	assert.Equal(t, "Binary", BinarySecret.String())

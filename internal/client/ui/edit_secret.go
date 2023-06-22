@@ -1,3 +1,4 @@
+//nolint:exhaustive // OK
 package ui
 
 import (

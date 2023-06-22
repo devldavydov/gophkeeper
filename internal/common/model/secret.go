@@ -18,10 +18,11 @@ var (
 type SecretType int32
 
 const (
-	CredsSecret  SecretType = 0
-	TextSecret   SecretType = 1
-	BinarySecret SecretType = 2
-	CardSecret   SecretType = 3
+	UnknownSecret SecretType = 0
+	CredsSecret   SecretType = 1
+	TextSecret    SecretType = 2
+	BinarySecret  SecretType = 3
+	CardSecret    SecretType = 4
 )
 
 func (st SecretType) String() string {
@@ -34,6 +35,8 @@ func (st SecretType) String() string {
 		return "Binary"
 	case CardSecret:
 		return "Card"
+	case UnknownSecret:
+		return "Unknown"
 	default:
 		return "Unknown"
 	}
@@ -43,6 +46,8 @@ func ValidSecretType(st SecretType) error {
 	switch st {
 	case CredsSecret, TextSecret, BinarySecret, CardSecret:
 		return nil
+	case UnknownSecret:
+		return ErrInvalidSecretType
 	default:
 		return ErrInvalidSecretType
 	}
@@ -85,6 +90,8 @@ func (s *Secret) GetPayload() (Payload, error) {
 		decObj = &BinaryPayload{}
 	case CardSecret:
 		decObj = &CardPayload{}
+	case UnknownSecret:
+		return nil, ErrUnknownPayload
 	default:
 		return nil, ErrUnknownPayload
 	}
