@@ -218,6 +218,8 @@ func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.Secre
 			return ErrSecretNotFound
 		case codes.FailedPrecondition:
 			return ErrSecretOutdated
+		case codes.InvalidArgument:
+			return ErrSecretInvalid
 		default:
 			return ErrInternalServerError
 		}

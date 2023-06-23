@@ -258,6 +258,164 @@ func (gt *GrpcTransportSuite) TestSecretGet() {
 	}
 }
 
+func (gt *GrpcTransportSuite) TestSecretCreate() {
+	fCreate := func() error {
+		return gt.tr.SecretCreate("token", &model.Secret{
+			Type:       model.CredsSecret,
+			Name:       "foo",
+			Meta:       "meta",
+			Version:    1,
+			PayloadRaw: []byte("foo"),
+		})
+	}
+
+	fMock := func(args ...any) {
+		gt.gCltMock.EXPECT().
+			SecretCreate(gomock.Any(), &pb.SecretCreateRequest{
+				Secret: &pb.Secret{
+					Name:       "foo",
+					Type:       pb.SecretType_CREDS,
+					Version:    1,
+					Meta:       "meta",
+					PayloadRaw: []byte("foo"),
+				},
+			}).
+			Return(args...)
+	}
+
+	for i, tt := range []struct {
+		fMockArgs []any
+		expErr    error
+	}{
+		{
+			fMockArgs: []any{nil, errors.New("Not gRPC error")},
+			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.AlreadyExists, "")},
+			expErr:    ErrSecretAlreadyExists,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.ResourceExhausted, "")},
+			expErr:    ErrSecretPayloadSizeExceeded,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.InvalidArgument, "")},
+			expErr:    ErrSecretInvalid,
+		},
+		{
+			fMockArgs: []any{nil, nil},
+			expErr:    nil,
+		},
+	} {
+		tt := tt
+		gt.Run(fmt.Sprintf("Run %d", i), func() {
+			fMock(tt.fMockArgs...)
+			err := fCreate()
+			if tt.expErr != nil {
+				gt.ErrorIs(err, tt.expErr)
+			}
+		})
+	}
+}
+
+func (gt *GrpcTransportSuite) TestSecretUpdate() {
+	fUpdate := func() error {
+		return gt.tr.SecretUpdate("token", "name", &model.SecretUpdate{
+			Meta:          "meta",
+			Version:       2,
+			PayloadRaw:    []byte("foo"),
+			UpdatePayload: true,
+		})
+	}
+
+	fMock := func(args ...any) {
+		gt.gCltMock.EXPECT().
+			SecretUpdate(gomock.Any(), &pb.SecretUpdateRequest{
+				Name:          "name",
+				Version:       2,
+				Meta:          "meta",
+				PayloadRaw:    []byte("foo"),
+				UpdatePayload: true,
+			}).
+			Return(args...)
+	}
+
+	for i, tt := range []struct {
+		fMockArgs []any
+		expErr    error
+	}{
+		{
+			fMockArgs: []any{nil, errors.New("Not gRPC error")},
+			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.NotFound, "")},
+			expErr:    ErrSecretNotFound,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.FailedPrecondition, "")},
+			expErr:    ErrSecretOutdated,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.InvalidArgument, "")},
+			expErr:    ErrSecretInvalid,
+		},
+		{
+			fMockArgs: []any{nil, nil},
+			expErr:    nil,
+		},
+	} {
+		tt := tt
+		gt.Run(fmt.Sprintf("Run %d", i), func() {
+			fMock(tt.fMockArgs...)
+			err := fUpdate()
+			if tt.expErr != nil {
+				gt.ErrorIs(err, tt.expErr)
+			}
+		})
+	}
+}
+
+func (gt *GrpcTransportSuite) TestSecretDelete() {
+	fDelete := func() error {
+		return gt.tr.SecretDelete("token", "name")
+	}
+
+	fMock := func(args ...any) {
+		gt.gCltMock.EXPECT().
+			SecretDelete(gomock.Any(), &pb.SecretDeleteRequest{Name: "name"}).
+			Return(args...)
+	}
+
+	for i, tt := range []struct {
+		fMockArgs []any
+		expErr    error
+	}{
+		{
+			fMockArgs: []any{nil, errors.New("Not gRPC error")},
+			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.Internal, "")},
+			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, nil},
+			expErr:    nil,
+		},
+	} {
+		tt := tt
+		gt.Run(fmt.Sprintf("Run %d", i), func() {
+			fMock(tt.fMockArgs...)
+			err := fDelete()
+			if tt.expErr != nil {
+				gt.ErrorIs(err, tt.expErr)
+			}
+		})
+	}
+}
+
 func TestGrpcTransportSuite(t *testing.T) {
 	suite.Run(t, new(GrpcTransportSuite))
 }
