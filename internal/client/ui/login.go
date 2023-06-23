@@ -41,7 +41,7 @@ func (r *App) doLogin() {
 			r.showError(_msgInternalServerError, r.showCreateUser)
 		case errors.Is(err, transport.ErrUserNotFound):
 			r.showError(_msgUserNotFound, r.showLogin)
-		case errors.Is(err, transport.ErrUserLoginFailed):
+		case errors.Is(err, transport.ErrUserPermissionDenied):
 			r.showError(_msgUserLoginFailed, r.showLogin)
 		}
 		return

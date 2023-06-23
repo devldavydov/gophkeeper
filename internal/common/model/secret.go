@@ -42,6 +42,9 @@ func (st SecretType) String() string {
 	}
 }
 
+// ValidSecretType checks validity of given secret type.
+//
+// Returns nil or ErrInvalidSecretType error.
 func ValidSecretType(st SecretType) error {
 	switch st {
 	case CredsSecret, TextSecret, BinarySecret, CardSecret:
@@ -78,6 +81,10 @@ type SecretUpdate struct {
 }
 
 // GetPayload returns Payload from binary raw.
+//
+// In case of unknown secret type returns ErrUnknownPayload.
+//
+// In case if MSGP deserialization error, returns specific Msgp error.
 func (s *Secret) GetPayload() (Payload, error) {
 	var decObj msgp.Decodable
 

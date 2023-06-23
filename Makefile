@@ -44,8 +44,8 @@ test_cover:
 
 .PHONY: run_docs
 run_docs:
-	@echo "See docs in http://localhost:8080/pkg/github.com/devldavydov/gophkeeper?m=all"
-	@godoc -http=:8080
+	@echo "See docs in http://localhost:8888/pkg/github.com/devldavydov/gophkeeper?m=all"
+	@godoc -http=:8888
 
 .PHONY: gen_tls
 gen_tls:

@@ -53,6 +53,13 @@ func NewPgStorage(pgConnString string, logger *logrus.Logger) (*PgStorage, error
 
 var _ Storage = (*PgStorage)(nil)
 
+// CreateUser - creates new user in storage. Accepts login and password.
+//
+// Returns new user id or error:
+//
+// - ErrUserAlreadyExists - if user already exists.
+//
+// - internal PG error.
 func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (int64, error) {
 	var userID int64
 	err := pg.db.QueryRowContext(ctx, _sqlCreateUser, login, password).Scan(&userID)
@@ -72,6 +79,13 @@ func (pg *PgStorage) CreateUser(ctx context.Context, login, password string) (in
 	return userID, nil
 }
 
+// FindUser - finds user in storage. Accepts login.
+//
+// Returns user id or error:
+//
+// - ErrUserNotFound - if user not exists.
+//
+// - internal PG error.
 func (pg *PgStorage) FindUser(ctx context.Context, login string) (int64, string, error) {
 	var userID int64
 	var userPassword string
@@ -86,6 +100,13 @@ func (pg *PgStorage) FindUser(ctx context.Context, login string) (int64, string,
 	return userID, userPassword, nil
 }
 
+// CreateSecret - create user's secret in storage. Accepts userID and secret.
+//
+// Returns nil or error:
+//
+// - ErrSecretAlreadyExists - if secret already exists.
+//
+// - internal PG error.
 func (pg *PgStorage) CreateSecret(ctx context.Context, userID int64, secret *model.Secret) error {
 	_, err := pg.db.ExecContext(
 		ctx,
@@ -113,6 +134,13 @@ func (pg *PgStorage) CreateSecret(ctx context.Context, userID int64, secret *mod
 	return nil
 }
 
+// GetSecret - gets user's secret from storage. Accepts userID and secret name.
+//
+// Returns secret or error:
+//
+// - ErrSecretNotFound - if secret not exists.
+//
+// - internal PG error.
 func (pg *PgStorage) GetSecret(ctx context.Context, userID int64, name string) (*model.Secret, error) {
 	secret := &model.Secret{}
 	err := pg.db.
@@ -128,6 +156,13 @@ func (pg *PgStorage) GetSecret(ctx context.Context, userID int64, name string) (
 	return secret, nil
 }
 
+// GetAllSecrets - gets all user's secrets from storage. Accepts userID.
+//
+// Returns secrets or error:
+//
+// - ErrNoSecrets - if no secrets exist.
+//
+// - internal PG error.
 func (pg *PgStorage) GetAllSecrets(ctx context.Context, userID int64) ([]model.SecretInfo, error) {
 	rows, err := pg.db.QueryContext(ctx, _sqlGetAllSecrets, userID)
 	if err != nil {
@@ -157,16 +192,39 @@ func (pg *PgStorage) GetAllSecrets(ctx context.Context, userID int64) ([]model.S
 	return items, nil
 }
 
+// DeleteSecret - deletes user's secret from storage. Accepts userID and secret name.
+//
+// Returns nil or error:
+//
+// - internal PG error.
 func (pg *PgStorage) DeleteSecret(ctx context.Context, userID int64, name string) error {
 	_, err := pg.db.ExecContext(ctx, _sqlDeleteSecret, userID, name)
 	return err
 }
 
-func (pg *PgStorage) DeleteAllSecrets(ctx context.Context) error {
-	_, err := pg.db.ExecContext(ctx, _sqlDeleteAllSecrets)
+// DeleteSecret - deletes all user's secrets from storage. Accepts userID.
+//
+// Returns nil or error:
+//
+// - internal PG error.
+func (pg *PgStorage) DeleteAllSecrets(ctx context.Context, userID int64) error {
+	_, err := pg.db.ExecContext(ctx, _sqlDeleteAllSecrets, userID)
 	return err
 }
 
+// UpdateSecret - updates user's secret in storage. Accepts userIDm secret name and secret update.
+//
+// Returns nil or error:
+//
+// - ErrSecretNotFound - if secret not found in storage.
+//
+// - ErrSecretOutdated - if secret in storage has greater version than update.
+//
+// - ErrSecretWrongVersion - if diff between storage secret version and update version greater than 1.
+//
+// Correct update - when updateVersion - currentVersion = 1.
+//
+// - internal PG error.
 func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string, update *model.SecretUpdate) error {
 	tx, err := pg.db.Begin()
 	if err != nil {
@@ -207,6 +265,9 @@ func (pg *PgStorage) UpdateSecret(ctx context.Context, userID int64, name string
 	return tx.Commit()
 }
 
+// Ping - checks storage availability.
+//
+// Returns true or false in case of error.
 func (pg *PgStorage) Ping(ctx context.Context) bool {
 	if err := pg.db.PingContext(ctx); err != nil {
 		pg.logger.Errorf("Failed to ping database, err: %v", err)
@@ -216,6 +277,7 @@ func (pg *PgStorage) Ping(ctx context.Context) bool {
 	return true
 }
 
+// Close - closes connection with storage.
 func (pg *PgStorage) Close() {
 	if pg.db == nil {
 		return

@@ -8,6 +8,16 @@ import (
 )
 
 // ServiceSettings represents settings for GophKeeper server.
+//
+// GRPCAddress - listen address of server.
+//
+// GRPCServerTLS - TLS server settings.
+//
+// DatabaseDsn - database connection string.
+//
+// ServerSecret - unique 32 chars string to be used as a key of encryption.
+//
+// ShutdownTimeout - server shitdown timeout.
 type ServiceSettings struct {
 	GRPCAddress     *nettools.Address
 	GRPCServerTLS   *gkTLS.ServerSettings

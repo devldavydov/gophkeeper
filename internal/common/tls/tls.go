@@ -18,6 +18,8 @@ type ServerSettings struct {
 }
 
 // NewServerSettings creates new ServerSettings object.
+//
+// Input arguments - certificate and key file paths.
 func NewServerSettings(certPath, keyPath string) (*ServerSettings, error) {
 	if certPath == "" || keyPath == "" {
 		return nil, errors.New("invalid TLS server settings")
@@ -26,6 +28,9 @@ func NewServerSettings(certPath, keyPath string) (*ServerSettings, error) {
 	return &ServerSettings{ServerCertPath: certPath, ServerKeyPath: keyPath}, nil
 }
 
+// Load creates new TransportCredentials from certificate and key file paths.
+//
+// In case of invalid format returns specific TLS error.
 func (t *ServerSettings) Load() (credentials.TransportCredentials, error) {
 	serverCert, err := tls.LoadX509KeyPair(t.ServerCertPath, t.ServerKeyPath)
 	if err != nil {
@@ -41,7 +46,7 @@ func (t *ServerSettings) Load() (credentials.TransportCredentials, error) {
 	return credentials.NewTLS(config), nil
 }
 
-// LoadCACert loads CA certificate from file.
+// LoadCACert loads Certificate Authority certificate from file.
 func LoadCACert(caCertPath string, customServerName string) (credentials.TransportCredentials, error) {
 	pemServerCA, err := os.ReadFile(caCertPath)
 	if err != nil {

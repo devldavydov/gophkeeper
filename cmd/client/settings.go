@@ -20,7 +20,16 @@ const (
 	_defaultConfigLogFile       = "client.log"
 )
 
-// Config represents command line/env client configuration options.
+// Config is a command line/env client configuration options.
+// Options:
+//   - ServerAddress - address of server to connect.
+//     env: "SERVER_ADDRESS", flag: "a".
+//   - CACert - TLS Certification Authority certificate file.
+//     env: "TLS_CA_CERT", flag: "tlscacert".
+//   - LogLevel - logging level.
+//     env: "LOG_LEVEL", flag: "l".
+//   - LogFile - file to log to.
+//     env: "LOG_FILE", flag: "f".
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	CACert        string `env:"TLS_CA_CERT"`
@@ -54,6 +63,8 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	return config, nil
 }
 
+// ClientSettingsAdapt adapts flag/env configuration settings to client settings internal format.
+// Returns error "errInvalidSettings" in case of invalid configuration.
 func ClientSettingsAdapt(config *Config) (*client.Settings, error) {
 	serverAddress, err := nettools.NewAddress(config.ServerAddress)
 	if err != nil {

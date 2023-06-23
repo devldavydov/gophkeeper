@@ -116,7 +116,7 @@ func (gt *GrpcTransportSuite) TestUserLogin() {
 		{
 			fMockArgs: []any{nil, status.Error(codes.PermissionDenied, "")},
 			expToken:  "",
-			expErr:    ErrUserLoginFailed,
+			expErr:    ErrUserPermissionDenied,
 		},
 		{
 			fMockArgs: []any{nil, status.Error(codes.Internal, "")},
@@ -161,6 +161,11 @@ func (gt *GrpcTransportSuite) TestSecretGetList() {
 			fMockArgs: []any{nil, status.Error(codes.Internal, "")},
 			expList:   nil,
 			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.PermissionDenied, "")},
+			expList:   nil,
+			expErr:    ErrUserPermissionDenied,
 		},
 		{
 			fMockArgs: []any{nil, status.Error(codes.NotFound, "")},
@@ -222,6 +227,11 @@ func (gt *GrpcTransportSuite) TestSecretGet() {
 			fMockArgs: []any{nil, status.Error(codes.Internal, "")},
 			expItem:   nil,
 			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.PermissionDenied, "")},
+			expItem:   nil,
+			expErr:    ErrUserPermissionDenied,
 		},
 		{
 			fMockArgs: []any{nil, status.Error(codes.NotFound, "")},
@@ -302,6 +312,10 @@ func (gt *GrpcTransportSuite) TestSecretCreate() {
 			expErr:    ErrSecretPayloadSizeExceeded,
 		},
 		{
+			fMockArgs: []any{nil, status.Error(codes.PermissionDenied, "")},
+			expErr:    ErrUserPermissionDenied,
+		},
+		{
 			fMockArgs: []any{nil, status.Error(codes.InvalidArgument, "")},
 			expErr:    ErrSecretInvalid,
 		},
@@ -360,6 +374,14 @@ func (gt *GrpcTransportSuite) TestSecretUpdate() {
 			expErr:    ErrSecretOutdated,
 		},
 		{
+			fMockArgs: []any{nil, status.Error(codes.PermissionDenied, "")},
+			expErr:    ErrUserPermissionDenied,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.ResourceExhausted, "")},
+			expErr:    ErrSecretPayloadSizeExceeded,
+		},
+		{
 			fMockArgs: []any{nil, status.Error(codes.InvalidArgument, "")},
 			expErr:    ErrSecretInvalid,
 		},
@@ -401,6 +423,10 @@ func (gt *GrpcTransportSuite) TestSecretDelete() {
 		{
 			fMockArgs: []any{nil, status.Error(codes.Internal, "")},
 			expErr:    ErrInternalServerError,
+		},
+		{
+			fMockArgs: []any{nil, status.Error(codes.PermissionDenied, "")},
+			expErr:    ErrUserPermissionDenied,
 		},
 		{
 			fMockArgs: []any{nil, nil},

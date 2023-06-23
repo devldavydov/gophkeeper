@@ -21,6 +21,7 @@ func NewService(settings *ServiceSettings, logger *logrus.Logger) *Service {
 	return &Service{settings: settings, logger: logger}
 }
 
+// Start - starts GophKeeper server service.
 func (s *Service) Start(ctx context.Context) error {
 	// Storage
 	stg, err := storage.NewPgStorage(s.settings.DatabaseDsn, s.logger)

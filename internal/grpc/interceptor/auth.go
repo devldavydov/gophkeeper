@@ -28,6 +28,12 @@ func NewAuthTokenInterceptor(protectedMethods []string, serverSecret []byte) *Au
 	return &AuthTokenInterceptor{protectedMethods: pm, serverSecret: serverSecret}
 }
 
+// Handle implements authentication for request.
+//
+// If incoming request does not containt metadata with token
+// or token invalid, returns PersmissionDenied gRPC code.
+//
+// Else retrieves user id from token, adds token to request context and calls request handler.
 func (a *AuthTokenInterceptor) Handle(
 	ctx context.Context,
 	req interface{},

@@ -32,6 +32,18 @@ const (
 )
 
 // App represents user interface application.
+//
+// UI application constists of terminal pages:
+//
+// - create user secret.
+//
+// - create user.
+//
+// - edit sercet.
+//
+// - user login.
+//
+// - secrets list.
 type App struct {
 	cltToken   string
 	tr         transport.Transport
@@ -49,10 +61,12 @@ type App struct {
 	wdgUser             *tview.TextView
 }
 
+// NewApp creates instance of App.
 func NewApp(tr transport.Transport, logger *logrus.Logger) *App {
 	return &App{tr: tr, app: tview.NewApplication(), logger: logger}
 }
 
+// Run starts UI application.
 func (r *App) Run() error {
 	r.uiPages = tview.NewPages()
 

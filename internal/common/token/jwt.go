@@ -14,6 +14,8 @@ const HeaderName = "JWT_TOKEN"
 var ErrInvalidToken = errors.New("invalid token")
 
 // NewJWTForUser creates new JWT token for user.
+//
+// In case of error returns specific JWT error.
 func NewJWTForUser(userID int64, expirationInterval time.Duration, secret []byte) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		ID:        strconv.FormatInt(userID, 10),
@@ -25,6 +27,8 @@ func NewJWTForUser(userID int64, expirationInterval time.Duration, secret []byte
 }
 
 // GetUserFromJWT get user id as string from token.
+//
+// If token invalid or expired, returns ErrInvalidToken error.
 func GetUserFromJWT(tokenString string, secret []byte) (string, error) {
 	var token *jwt.Token
 	var err error

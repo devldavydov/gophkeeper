@@ -130,3 +130,13 @@ func TestSecretGetPayload(t *testing.T) {
 		})
 	}
 }
+
+func TestValidSecretType(t *testing.T) {
+	for _, sType := range []SecretType{CredsSecret, TextSecret, BinarySecret, CardSecret} {
+		assert.NoError(t, ValidSecretType(sType))
+	}
+
+	for _, sType := range []SecretType{UnknownSecret, SecretType(100)} {
+		assert.ErrorIs(t, ValidSecretType(sType), ErrInvalidSecretType)
+	}
+}

@@ -19,7 +19,7 @@ import (
 
 const _serverRequestTimeout = 15 * time.Second
 
-// GrpcTransport is a gRPC implementation for Transport interface.
+// GrpcTransport is a gRPC implementation of Transport interface.
 type GrpcTransport struct {
 	gClt   pb.GophKeeperServiceClient
 	logger *logrus.Logger
@@ -27,6 +27,7 @@ type GrpcTransport struct {
 
 var _ Transport = (*GrpcTransport)(nil)
 
+// NewGrpcTransport creates new GrpcTransport object.
 func NewGrpcTransport(
 	serverAddress *nettools.Address,
 	tlsCACertPath string,
@@ -56,6 +57,15 @@ func newGrpcTransport(clt pb.GophKeeperServiceClient, logger *logrus.Logger) *Gr
 	return &GrpcTransport{gClt: clt, logger: logger}
 }
 
+// UserCreate is a gRPC implemention of user creation method. Accepts user login and password.
+//
+// Returns user token or error:
+//
+// - ErrUserAlreadyExists - user with given login/password already exists on server.
+//
+// - ErrUserInvalidCredentials - provided user login or password invalid.
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) UserCreate(userLogin, userPassword string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -81,6 +91,15 @@ func (gt *GrpcTransport) UserCreate(userLogin, userPassword string) (string, err
 	return pbToken.Token, nil
 }
 
+// UserLogin is a gRPC implemention of user login method. Accepts user login and password.
+//
+// Returns user token or error:
+//
+// - ErrUserNotFound - user with given login/password not found on server.
+//
+// - ErrUserPermissionDenied - provided user login or password not match and permission denied.
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) UserLogin(userLogin, userPassword string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
@@ -97,7 +116,7 @@ func (gt *GrpcTransport) UserLogin(userLogin, userPassword string) (string, erro
 		case codes.NotFound:
 			return "", ErrUserNotFound
 		case codes.PermissionDenied:
-			return "", ErrUserLoginFailed
+			return "", ErrUserPermissionDenied
 		default:
 			return "", ErrInternalServerError
 		}
@@ -106,6 +125,13 @@ func (gt *GrpcTransport) UserLogin(userLogin, userPassword string) (string, erro
 	return pbToken.Token, nil
 }
 
+// SecretGetList is a gRPC implemention of user's secret list method. Accepts authenticated user token.
+//
+// Returns list of secrets or error:
+//
+// - ErrUserPermissionDenied - provided token not valid and permission denied.
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) SecretGetList(token string) ([]model.SecretInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
@@ -121,6 +147,8 @@ func (gt *GrpcTransport) SecretGetList(token string) ([]model.SecretInfo, error)
 		switch status.Code() { //nolint:exhaustive // OK
 		case codes.NotFound:
 			return make([]model.SecretInfo, 0), nil
+		case codes.PermissionDenied:
+			return nil, ErrUserPermissionDenied
 		default:
 			return nil, ErrInternalServerError
 		}
@@ -139,6 +167,15 @@ func (gt *GrpcTransport) SecretGetList(token string) ([]model.SecretInfo, error)
 	return lstSecretInfo, nil
 }
 
+// SecretGet is a gRPC implemention of user's get secret method. Accepts authenticated user token and secret name.
+//
+// Returns secret or error:
+//
+// - ErrSecretNotFound - secret with given name not found.
+//
+// - ErrUserPermissionDenied - provided user token not valid and permission denied.
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) SecretGet(token, name string) (*model.Secret, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
@@ -154,6 +191,8 @@ func (gt *GrpcTransport) SecretGet(token, name string) (*model.Secret, error) {
 		switch status.Code() { //nolint:exhaustive // OK
 		case codes.NotFound:
 			return nil, ErrSecretNotFound
+		case codes.PermissionDenied:
+			return nil, ErrUserPermissionDenied
 		default:
 			return nil, ErrInternalServerError
 		}
@@ -168,6 +207,19 @@ func (gt *GrpcTransport) SecretGet(token, name string) (*model.Secret, error) {
 	}, nil
 }
 
+// SecretCreate is a gRPC implemention of user's create secret method. Accepts authenticated user token and new secret.
+//
+// Returns nil or error:
+//
+// - ErrSecretAlreadyExists - secret with given name already exists.
+//
+// - ErrUserPermissionDenied - provided user token not valid and permission denied.
+//
+// - ErrSecretPayloadSizeExceeded - provided file in binary secret too big.
+//
+// - ErrSecretInvalid - provided secret not valid.
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
@@ -195,6 +247,8 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error 
 			return ErrSecretAlreadyExists
 		case codes.ResourceExhausted:
 			return ErrSecretPayloadSizeExceeded
+		case codes.PermissionDenied:
+			return ErrUserPermissionDenied
 		case codes.InvalidArgument:
 			return ErrSecretInvalid
 		default:
@@ -205,6 +259,23 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error 
 	return nil
 }
 
+// SecretUpdate is a gRPC implemention of user's update secret method.
+//
+// Accepts authenticated user token and secret update.
+//
+// Returns nil or error:
+//
+// - ErrSecretNotFound - secret with given name not found.
+//
+// - ErrUserPermissionDenied - provided user token not valid and permission denied.
+//
+// - ErrSecretPayloadSizeExceeded - provided file in binary secret too big.
+//
+// - ErrSecretInvalid - provided secret not valid.
+//
+// - ErrSecretOutdated - secret outdated (was changed in another session).
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.SecretUpdate) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
@@ -232,6 +303,10 @@ func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.Secre
 			return ErrSecretOutdated
 		case codes.InvalidArgument:
 			return ErrSecretInvalid
+		case codes.PermissionDenied:
+			return ErrUserPermissionDenied
+		case codes.ResourceExhausted:
+			return ErrSecretPayloadSizeExceeded
 		default:
 			return ErrInternalServerError
 		}
@@ -240,6 +315,15 @@ func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.Secre
 	return nil
 }
 
+// SecretDelete is a gRPC implemention of user's delete secret method.
+//
+// Accepts authenticated user token and secret name.
+//
+// Returns nil or error:
+//
+// - ErrUserPermissionDenied - provided user token not valid and permission denied.
+//
+// - ErrInternalServerError - unexpected server error.
 func (gt *GrpcTransport) SecretDelete(token, name string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _serverRequestTimeout)
 	defer cancel()
@@ -247,7 +331,17 @@ func (gt *GrpcTransport) SecretDelete(token, name string) error {
 	_, err := gt.gClt.SecretDelete(contextWithToken(ctx, token), &pb.SecretDeleteRequest{Name: name})
 	if err != nil {
 		gt.logger.Errorf("gRPC secret delete request error: %v", err)
-		return ErrInternalServerError
+		status, ok := status.FromError(err)
+		if !ok {
+			return ErrInternalServerError
+		}
+
+		switch status.Code() { //nolint:exhaustive // OK
+		case codes.PermissionDenied:
+			return ErrUserPermissionDenied
+		default:
+			return ErrInternalServerError
+		}
 	}
 
 	return nil

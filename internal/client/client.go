@@ -1,4 +1,4 @@
-// Package server is the main package for GophKeeper client part.
+// Package client is the main package for GophKeeper client part.
 package client
 
 import (
@@ -21,6 +21,11 @@ func NewClient(settngs *Settings, logger *logrus.Logger) *Client {
 	return &Client{settings: settngs, logger: logger}
 }
 
+// Start - starts client application:
+//
+// - initialize transport with server.
+//
+// - start UI application.
 func (r *Client) Start(ctx context.Context) error {
 	// Create Transport
 	tr, err := transport.NewGrpcTransport(r.settings.ServerAddress, r.settings.TLSCACertPath, r.logger)

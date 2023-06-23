@@ -88,6 +88,17 @@ func NewGrpcServer(
 	return grpcSrv, srv
 }
 
+// UserCreate - gRPC handler to create user. Accepts user.
+//
+// Returns user token or error code:
+//
+// - InvalidArgument - invalid user login or password.
+//
+// - AlreadyExists - user already exists.
+//
+// - Unavailable - user token generation error.
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) UserCreate(ctx context.Context, user *pb.User) (*pb.UserAuthToken, error) {
 	if user.Login == "" || user.Password == "" {
 		g.logger.Errorf("invalid user credentials: user='%s' password='%s'", user.Login, user.Password)
@@ -119,6 +130,17 @@ func (g *GrpcServer) UserCreate(ctx context.Context, user *pb.User) (*pb.UserAut
 	return &pb.UserAuthToken{Token: token}, nil
 }
 
+// UserLogin - gRPC handler to login user. Accepts user.
+//
+// Returns user token or error code:
+//
+// - NotFound - user not found.
+//
+// - PermissionDenied - user authentication failed.
+//
+// - Unavailable - user token generation error.
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) UserLogin(ctx context.Context, user *pb.User) (*pb.UserAuthToken, error) {
 	userID, pwdHash, err := g.stg.FindUser(ctx, user.Login)
 	if err != nil {
@@ -145,6 +167,13 @@ func (g *GrpcServer) UserLogin(ctx context.Context, user *pb.User) (*pb.UserAuth
 	return &pb.UserAuthToken{Token: token}, nil
 }
 
+// SecretGetList - gRPC handler to get user's secrets list. Accepts user id in context.
+//
+// Returns user's secrets list or error code:
+//
+// - NotFound - user's secrets not found.
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) SecretGetList(ctx context.Context, _ *pb.Empty) (*pb.SecretGetListResponse, error) {
 	userID, err := g.getUserIDFromContext(ctx)
 	if err != nil {
@@ -172,6 +201,13 @@ func (g *GrpcServer) SecretGetList(ctx context.Context, _ *pb.Empty) (*pb.Secret
 	return respList, nil
 }
 
+// SecretGet - gRPC handler to get user's secret. Accepts user id in context and secret name.
+//
+// Returns user's secret or error code:
+//
+// - NotFound - user's secret not found.
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) SecretGet(ctx context.Context, in *pb.SecretGetRequest) (*pb.Secret, error) {
 	userID, err := g.getUserIDFromContext(ctx)
 	if err != nil {
@@ -207,6 +243,17 @@ func (g *GrpcServer) SecretGet(ctx context.Context, in *pb.SecretGetRequest) (*p
 	return secret, nil
 }
 
+// SecretCreate - gRPC handler to create user's secret. Accepts user id in context and secret.
+//
+// Returns nil or error code:
+//
+// - InvalidArgument - secret invalid.
+//
+// - ResourceExhausted - secret payload too big.
+//
+// - AlreadyExists - secret already exists.
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateRequest) (*pb.Empty, error) {
 	userID, err := g.getUserIDFromContext(ctx)
 	if err != nil {
@@ -260,10 +307,29 @@ func (g *GrpcServer) SecretCreate(ctx context.Context, in *pb.SecretCreateReques
 	return &pb.Empty{}, nil
 }
 
+// SecretUpdate - gRPC handler to update user's secret. Accepts user id in context and secret update.
+//
+// Returns nil or error code:
+//
+// - NotFound - secret not found.
+//
+// - InvalidArgument - secret invalid.
+//
+// - FailedPrecondition - secret outdated (update version less than in storage).
+//
+// - ResourceExhausted - secret payload too big.
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) SecretUpdate(ctx context.Context, in *pb.SecretUpdateRequest) (*pb.Empty, error) {
 	userID, err := g.getUserIDFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(in.PayloadRaw) > model.MaxPayloadSizeBytes {
+		g.logger.Errorf(
+			"[user=%d] secret payload size (%d) exceed limit (%d)", userID, len(in.PayloadRaw), model.MaxPayloadSizeBytes)
+		return nil, status.Error(codes.ResourceExhausted, _msgSecretPayloadSizeExceeded)
 	}
 
 	// Encrypt payload
@@ -307,6 +373,12 @@ func (g *GrpcServer) SecretUpdate(ctx context.Context, in *pb.SecretUpdateReques
 
 	return &pb.Empty{}, nil
 }
+
+// SecretDelete - gRPC handler to delete user's secret. Accepts user id in context and secret name.
+//
+// Returns nil or error code:
+//
+// - Internal - unexpected error.
 func (g *GrpcServer) SecretDelete(ctx context.Context, in *pb.SecretDeleteRequest) (*pb.Empty, error) {
 	userID, err := g.getUserIDFromContext(ctx)
 	if err != nil {
@@ -322,12 +394,17 @@ func (g *GrpcServer) SecretDelete(ctx context.Context, in *pb.SecretDeleteReques
 	return &pb.Empty{}, nil
 }
 
+// Ping - gRPC handler to check storage availability. Accepts user id.
+//
+// Returns nil or error code:
+//
+// - Unavailable - storage unavailable.
 func (g *GrpcServer) Ping(ctx context.Context, _ *pb.Empty) (*pb.Empty, error) {
 	res := g.stg.Ping(ctx)
 	if res {
 		return &pb.Empty{}, nil
 	}
-	return nil, status.Error(codes.Internal, _msgPingFailed)
+	return nil, status.Error(codes.Unavailable, _msgPingFailed)
 }
 
 func hashPassword(password string) (string, error) {

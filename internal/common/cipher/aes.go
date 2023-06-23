@@ -15,6 +15,8 @@ var ErrWrongKeyLength = errors.New("key length should be 32 bytes")
 const AESKeyLength = 32
 
 // AESEncrypt encrypts plainData with secretKey.
+//
+// Accespts plain data and key. Returns encrypted data or error.
 func AESEncrpyt(plainData []byte, secretKey []byte) ([]byte, error) {
 	if len(secretKey) != AESKeyLength {
 		return nil, ErrWrongKeyLength
@@ -39,6 +41,8 @@ func AESEncrpyt(plainData []byte, secretKey []byte) ([]byte, error) {
 }
 
 // AESDecrypt decrypts cipherData with secretKey.
+//
+// Accepts encrypted and key. Returns plain data or error.
 func AESDecrypt(cipherData []byte, secretKey []byte) ([]byte, error) {
 	if len(secretKey) != AESKeyLength {
 		return nil, ErrWrongKeyLength

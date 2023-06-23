@@ -144,7 +144,7 @@ func (pg *PgStorageSuite) TestGetAllSecrets() {
 	userID := pg.createTestUser(ctx)
 
 	pg.Run("clear all secrets", func() {
-		pg.NoError(pg.stg.DeleteAllSecrets(ctx))
+		pg.NoError(pg.stg.DeleteAllSecrets(ctx, userID))
 	})
 
 	pg.Run("get all secrets - no secrets", func() {

@@ -17,6 +17,8 @@ type Address struct {
 }
 
 // NewAddress creates new Address object.
+//
+// In case of invalid input argument, returns ErrAddressFormat error.
 func NewAddress(addr string) (*Address, error) {
 	parts := strings.Split(addr, ":")
 	if len(parts) != 2 { //nolint:gomnd // No magic numbers

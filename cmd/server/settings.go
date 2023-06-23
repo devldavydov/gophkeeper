@@ -26,7 +26,22 @@ const (
 	_defaultConfigShutdownTimeout   = 10 * time.Second
 )
 
-// Config represents command line/env server configuration options.
+// Config is a command line/env server configuration options.
+// Options:
+//   - GRPCAddress - listen address of server.
+//     env: "GRPC_ADDRESS", flag: "a".
+//   - GRPCServerTLSCert - TLS certificate of server.
+//     env: "GRPC_SERVER_TLS_CERT", flag: "tlscert".
+//   - GRPCServerTLSKey - TLS certificate key of server.
+//     env: "GRPC_SERVER_TLS_KEY", flag: "tlskey".
+//   - DatabaseDsn - database connection string.
+//     env: "DATABASE_DSN", flag: "d".
+//   - LogLevel - logging level.
+//     env: "LOG_LEVEL", flag: "l".
+//   - ServerSecret - unique 32 chars string to be used as a key of encryption.
+//     env: "SERVER_SECRET", flag: "s".
+//   - ShutdownTimeout - server shitdown timeout.
+//     env: "SHUTDOWN_TIMEOUT", flag: "t".
 type Config struct {
 	GRPCAddress       string        `env:"GRPC_ADDRESS"`
 	GRPCServerTLSCert string        `env:"GRPC_SERVER_TLS_CERT"`
@@ -66,7 +81,8 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	return config, nil
 }
 
-// ServiceSettingsAdapt converts configuration to server service settings.
+// ServiceSettingsAdapt adapts flag/en configuration to server service settings internal format.
+// Returns error "errInvalidSettings" in case of invalid configuration.
 func ServiceSettingsAdapt(config *Config) (*server.ServiceSettings, error) {
 	grpcAddress, err := nettools.NewAddress(config.GRPCAddress)
 	if err != nil {

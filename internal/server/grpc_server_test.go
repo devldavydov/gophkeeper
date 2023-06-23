@@ -264,6 +264,29 @@ func (gs *GrpcServerSuite) TestSecretUpdateNotExists() {
 	})
 }
 
+func (gs *GrpcServerSuite) TestSecretUpdatePayloadSizeExceeds() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	token := gs.createTestUser(ctx)
+
+	gs.Run("update secret payload size exceeds", func() {
+		_, err := gs.testClt.SecretUpdate(
+			contextWithToken(ctx, token),
+			&pb.SecretUpdateRequest{
+				Name:          "test",
+				Version:       2,
+				Meta:          "new meta",
+				PayloadRaw:    make([]byte, model.MaxPayloadSizeBytes+1),
+				UpdatePayload: true,
+			})
+		gs.Error(err)
+		status, ok := status.FromError(err)
+		gs.True(ok)
+		gs.Equal(codes.ResourceExhausted, status.Code())
+	})
+}
+
 func (gs *GrpcServerSuite) TestSecretUpdate() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

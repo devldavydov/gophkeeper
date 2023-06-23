@@ -58,6 +58,7 @@ const (
 		`
 	_sqlDeleteAllSecrets = `
 		DELETE FROM secrets
+		WHERE user_id = $1
 		`
 	_sqlLockSecret = `
 		SELECT version FROM secrets

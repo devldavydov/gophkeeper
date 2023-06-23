@@ -8,6 +8,8 @@ import (
 )
 
 // Serialize input object to bytes.
+//
+// Returns serialized byte slice or Msgp error.
 func Serialize(input msgp.Encodable) ([]byte, error) {
 	var buf bytes.Buffer
 
@@ -22,6 +24,10 @@ func Serialize(input msgp.Encodable) ([]byte, error) {
 }
 
 // Deserialize bytes to output object.
+//
+// In case of success argument ouput contains deserialized object.
+//
+// In case of error returns MSGP error.
 func Deserialize(data []byte, output msgp.Decodable) error {
 	buf := bytes.NewBuffer(data)
 
@@ -35,6 +41,10 @@ func Deserialize(data []byte, output msgp.Decodable) error {
 }
 
 // SerDe - serialize and deserialize.
+//
+// In case of success argument ouput contains deserialized object.
+//
+// In case of error returns MSGP error.
 func SerDe(input msgp.Encodable, output msgp.Decodable) error {
 	data, err := Serialize(input)
 	if err != nil {
