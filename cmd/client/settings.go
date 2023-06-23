@@ -17,6 +17,7 @@ const (
 	_defaultConfigServerAddress = "127.0.0.1:8080"
 	_defaultConfigCACert        = ""
 	_defaultConfigLogLevel      = "INFO"
+	_defaultConfigLogFile       = "client.log"
 )
 
 // Config represents command line/env client configuration options.
@@ -24,6 +25,7 @@ type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	CACert        string `env:"TLS_CA_CERT"`
 	LogLevel      string `env:"LOG_LEVEL"`
+	LogFile       string `env:"LOG_FILE"`
 }
 
 // LoadConfig loads server configuration from flags/env.
@@ -35,6 +37,7 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	flagSet.StringVar(&config.ServerAddress, "a", _defaultConfigServerAddress, "server address")
 	flagSet.StringVar(&config.CACert, "tlscacert", _defaultConfigCACert, "CA certificate")
 	flagSet.StringVar(&config.LogLevel, "l", _defaultConfigLogLevel, "log level")
+	flagSet.StringVar(&config.LogFile, "f", _defaultConfigLogFile, "log file")
 
 	flagSet.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])

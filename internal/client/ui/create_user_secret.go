@@ -104,6 +104,7 @@ func (r *App) doCreateUserSecret() {
 
 	payloadRaw, err := gkMsgp.Serialize(payload.(msgp.Encodable))
 	if err != nil {
+		r.logger.Errorf("Create user secret Msgp serialize error: %v", err)
 		r.showError(_msgClientError, r.showCreateUserSecretCleared)
 		return
 	}

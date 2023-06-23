@@ -23,13 +23,13 @@ func NewClient(settngs *Settings, logger *logrus.Logger) *Client {
 
 func (r *Client) Start(ctx context.Context) error {
 	// Create Transport
-	tr, err := transport.NewGrpcTransport(r.settings.ServerAddress, r.settings.TLSCACertPath)
+	tr, err := transport.NewGrpcTransport(r.settings.ServerAddress, r.settings.TLSCACertPath, r.logger)
 	if err != nil {
 		return err
 	}
 
 	// Start UI application
-	uiApp := ui.NewApp(tr)
+	uiApp := ui.NewApp(tr, r.logger)
 
 	errChan := make(chan error)
 	go func(ch chan error) {

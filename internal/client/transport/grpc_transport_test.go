@@ -9,6 +9,7 @@ import (
 	pb "github.com/devldavydov/gophkeeper/internal/grpc"
 	"github.com/devldavydov/gophkeeper/internal/grpc/mocks"
 	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,9 +23,10 @@ type GrpcTransportSuite struct {
 }
 
 func (gt *GrpcTransportSuite) SetupTest() {
+	logger := logrus.New()
 	gt.gmckCtrl = gomock.NewController(gt.T())
 	gt.gCltMock = mocks.NewMockGophKeeperServiceClient(gt.gmckCtrl)
-	gt.tr = newGrpcTransport(gt.gCltMock)
+	gt.tr = newGrpcTransport(gt.gCltMock, logger)
 }
 
 func (gt *GrpcTransportSuite) TearDownTest() {

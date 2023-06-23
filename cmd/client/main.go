@@ -38,10 +38,11 @@ func run() error {
 		return fmt.Errorf("failed to load flag and ENV settings: %w", err)
 	}
 
-	logger, err := gkLog.NewLogger(config.LogLevel)
+	logger, closer, err := gkLog.NewLoggerF(config.LogLevel, config.LogFile)
 	if err != nil {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
+	defer closer.Close()
 
 	cltSettings, err := ClientSettingsAdapt(config)
 	if err != nil {

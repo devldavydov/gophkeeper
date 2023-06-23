@@ -162,6 +162,7 @@ func (r *App) doSaveSecret() {
 		var payloadRaw []byte
 		payloadRaw, err = gkMsgp.Serialize(payload.(msgp.Encodable))
 		if err != nil {
+			r.logger.Errorf("Edit user secret Msgp serialize error: %v", err)
 			r.showError(_msgClientError, r.showEditUserSecretPage)
 			return
 		}

@@ -23,3 +23,6 @@ go.work
 
 # Test cover
 cover.html
+
+# Logs
+*.log

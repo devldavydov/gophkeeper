@@ -7,6 +7,7 @@ import (
 	"github.com/devldavydov/gophkeeper/internal/client/transport"
 	"github.com/devldavydov/gophkeeper/internal/common/model"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -35,6 +36,7 @@ type App struct {
 	cltToken   string
 	tr         transport.Transport
 	lstSecrets []model.SecretInfo
+	logger     *logrus.Logger
 	//
 	app                 *tview.Application
 	uiPages             *tview.Pages
@@ -47,8 +49,8 @@ type App struct {
 	wdgUser             *tview.TextView
 }
 
-func NewApp(tr transport.Transport) *App {
-	return &App{tr: tr, app: tview.NewApplication()}
+func NewApp(tr transport.Transport, logger *logrus.Logger) *App {
+	return &App{tr: tr, app: tview.NewApplication(), logger: logger}
 }
 
 func (r *App) Run() error {

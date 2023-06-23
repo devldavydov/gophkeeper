@@ -12,6 +12,7 @@ func TestApplicatrionSettingsAdaptFromEnv(t *testing.T) {
 	t.Setenv("SERVER_ADDRESS", "127.0.0.1:8888")
 	t.Setenv("TLS_CA_CERT", "/tmp/ca.cert")
 	t.Setenv("LOG_LEVEL", "DEBUG")
+	t.Setenv("LOG_FILE", "log.log")
 
 	testFlagSet := flag.NewFlagSet("test", flag.ExitOnError)
 	config, err := LoadConfig(*testFlagSet, []string{})
@@ -30,6 +31,7 @@ func TestApplicationSettingsAdaptFromFlag(t *testing.T) {
 		"-a", "127.0.0.1:8888",
 		"-tlscacert", "/tmp/ca.cert",
 		"-l", "DEBUG",
+		"-f", "log.log",
 	})
 	assert.NoError(t, err)
 

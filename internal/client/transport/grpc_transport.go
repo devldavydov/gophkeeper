@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/devldavydov/gophkeeper/internal/common/model"
+	"github.com/sirupsen/logrus"
 
 	"github.com/devldavydov/gophkeeper/internal/common/nettools"
 	gkTLS "github.com/devldavydov/gophkeeper/internal/common/tls"
@@ -20,12 +21,17 @@ const _serverRequestTimeout = 15 * time.Second
 
 // GrpcTransport is a gRPC implementation for Transport interface.
 type GrpcTransport struct {
-	gClt pb.GophKeeperServiceClient
+	gClt   pb.GophKeeperServiceClient
+	logger *logrus.Logger
 }
 
 var _ Transport = (*GrpcTransport)(nil)
 
-func NewGrpcTransport(serverAddress *nettools.Address, tlsCACertPath string) (*GrpcTransport, error) {
+func NewGrpcTransport(
+	serverAddress *nettools.Address,
+	tlsCACertPath string,
+	logger *logrus.Logger,
+) (*GrpcTransport, error) {
 	tlsCredentials, err := gkTLS.LoadCACert(tlsCACertPath, "")
 	if err != nil {
 		return nil, err
@@ -43,11 +49,11 @@ func NewGrpcTransport(serverAddress *nettools.Address, tlsCACertPath string) (*G
 		return nil, err
 	}
 
-	return newGrpcTransport(pb.NewGophKeeperServiceClient(conn)), nil
+	return newGrpcTransport(pb.NewGophKeeperServiceClient(conn), logger), nil
 }
 
-func newGrpcTransport(clt pb.GophKeeperServiceClient) *GrpcTransport {
-	return &GrpcTransport{gClt: clt}
+func newGrpcTransport(clt pb.GophKeeperServiceClient, logger *logrus.Logger) *GrpcTransport {
+	return &GrpcTransport{gClt: clt, logger: logger}
 }
 
 func (gt *GrpcTransport) UserCreate(userLogin, userPassword string) (string, error) {
@@ -56,6 +62,7 @@ func (gt *GrpcTransport) UserCreate(userLogin, userPassword string) (string, err
 
 	pbToken, err := gt.gClt.UserCreate(ctx, &pb.User{Login: userLogin, Password: userPassword})
 	if err != nil {
+		gt.logger.Errorf("gRPC user create request error: %v", err)
 		status, ok := status.FromError(err)
 		if !ok {
 			return "", ErrInternalServerError
@@ -80,6 +87,7 @@ func (gt *GrpcTransport) UserLogin(userLogin, userPassword string) (string, erro
 
 	pbToken, err := gt.gClt.UserLogin(ctx, &pb.User{Login: userLogin, Password: userPassword})
 	if err != nil {
+		gt.logger.Errorf("gRPC user login request error: %v", err)
 		status, ok := status.FromError(err)
 		if !ok {
 			return "", ErrInternalServerError
@@ -104,6 +112,7 @@ func (gt *GrpcTransport) SecretGetList(token string) ([]model.SecretInfo, error)
 
 	lstSrvSecrets, err := gt.gClt.SecretGetList(contextWithToken(ctx, token), &pb.Empty{})
 	if err != nil {
+		gt.logger.Errorf("gRPC secret get list request error: %v", err)
 		status, ok := status.FromError(err)
 		if !ok {
 			return nil, ErrInternalServerError
@@ -136,6 +145,7 @@ func (gt *GrpcTransport) SecretGet(token, name string) (*model.Secret, error) {
 
 	pbSecret, err := gt.gClt.SecretGet(contextWithToken(ctx, token), &pb.SecretGetRequest{Name: name})
 	if err != nil {
+		gt.logger.Errorf("gRPC secret get request error: %v", err)
 		status, ok := status.FromError(err)
 		if !ok {
 			return nil, ErrInternalServerError
@@ -174,6 +184,7 @@ func (gt *GrpcTransport) SecretCreate(token string, secret *model.Secret) error 
 
 	_, err := gt.gClt.SecretCreate(contextWithToken(ctx, token), secretReq)
 	if err != nil {
+		gt.logger.Errorf("gRPC secret create request error: %v", err)
 		status, ok := status.FromError(err)
 		if !ok {
 			return ErrInternalServerError
@@ -208,6 +219,7 @@ func (gt *GrpcTransport) SecretUpdate(token, name string, updSecret *model.Secre
 
 	_, err := gt.gClt.SecretUpdate(contextWithToken(ctx, token), updReq)
 	if err != nil {
+		gt.logger.Errorf("gRPC secret update request error: %v", err)
 		status, ok := status.FromError(err)
 		if !ok {
 			return ErrInternalServerError
@@ -234,6 +246,7 @@ func (gt *GrpcTransport) SecretDelete(token, name string) error {
 
 	_, err := gt.gClt.SecretDelete(contextWithToken(ctx, token), &pb.SecretDeleteRequest{Name: name})
 	if err != nil {
+		gt.logger.Errorf("gRPC secret delete request error: %v", err)
 		return ErrInternalServerError
 	}
 
