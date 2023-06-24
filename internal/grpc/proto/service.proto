@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package proto;
+
+import "internal/grpc/proto/secret.proto";
+import "internal/grpc/proto/user.proto";
+
+option go_package = "internal/grpc";
+
+message Empty {}
+
+service GophKeeperService {
+  // User
+  rpc UserCreate(User) returns (UserAuthToken);
+  rpc UserLogin(User) returns (UserAuthToken);
+  // Secret
+  rpc SecretGetList(Empty) returns (SecretGetListResponse);
+  rpc SecretGet(SecretGetRequest) returns (Secret);
+  rpc SecretCreate(SecretCreateRequest) returns (Empty);
+  rpc SecretUpdate(SecretUpdateRequest) returns (Empty);
+  rpc SecretDelete(SecretDeleteRequest) returns (Empty);
+  // Other
+  rpc Ping(Empty) returns (Empty);
+}
