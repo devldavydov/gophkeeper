@@ -13,8 +13,11 @@ import (
 
 // ServerSettings represents TLS server settings.
 type ServerSettings struct {
+	// Server certificate file path
 	ServerCertPath string
-	ServerKeyPath  string
+
+	// Server certificate key file path
+	ServerKeyPath string
 }
 
 // NewServerSettings creates new ServerSettings object.

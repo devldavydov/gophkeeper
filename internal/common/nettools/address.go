@@ -4,8 +4,8 @@ package nettools
 import (
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
-	"strings"
 )
 
 var ErrAddressFormat = errors.New("wrong address format")
@@ -20,18 +20,17 @@ type Address struct {
 //
 // In case of invalid input argument, returns ErrAddressFormat error.
 func NewAddress(addr string) (*Address, error) {
-	parts := strings.Split(addr, ":")
-	if len(parts) != 2 { //nolint:gomnd // No magic numbers
-		return nil, ErrAddressFormat
-	}
-
-	host := parts[0]
-	port, err := strconv.Atoi(parts[1])
+	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, ErrAddressFormat
 	}
 
-	return &Address{Host: host, Port: port}, nil
+	nPort, err := strconv.Atoi(port)
+	if err != nil {
+		return nil, ErrAddressFormat
+	}
+
+	return &Address{Host: host, Port: nPort}, nil
 }
 
 func (a Address) String() string {

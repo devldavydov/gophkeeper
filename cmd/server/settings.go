@@ -27,29 +27,34 @@ const (
 )
 
 // Config is a command line/env server configuration options.
-// Options:
-//   - GRPCAddress - listen address of server.
-//     env: "GRPC_ADDRESS", flag: "a".
-//   - GRPCServerTLSCert - TLS certificate of server.
-//     env: "GRPC_SERVER_TLS_CERT", flag: "tlscert".
-//   - GRPCServerTLSKey - TLS certificate key of server.
-//     env: "GRPC_SERVER_TLS_KEY", flag: "tlskey".
-//   - DatabaseDsn - database connection string.
-//     env: "DATABASE_DSN", flag: "d".
-//   - LogLevel - logging level.
-//     env: "LOG_LEVEL", flag: "l".
-//   - ServerSecret - unique 32 chars string to be used as a key of encryption.
-//     env: "SERVER_SECRET", flag: "s".
-//   - ShutdownTimeout - server shitdown timeout.
-//     env: "SHUTDOWN_TIMEOUT", flag: "t".
 type Config struct {
-	GRPCAddress       string        `env:"GRPC_ADDRESS"`
-	GRPCServerTLSCert string        `env:"GRPC_SERVER_TLS_CERT"`
-	GRPCServerTLSKey  string        `env:"GRPC_SERVER_TLS_KEY"`
-	DatabaseDsn       string        `env:"DATABASE_DSN"`
-	LogLevel          string        `env:"LOG_LEVEL"`
-	ServerSecret      string        `env:"SERVER_SECRET"`
-	ShutdownTimeout   time.Duration `env:"SHUTDOWN_TIMEOUT"`
+	// GRPCAddress - listen address of server.
+	// env: "GRPC_ADDRESS", flag: "a".
+	GRPCAddress string `env:"GRPC_ADDRESS"`
+
+	// GRPCServerTLSCert - TLS certificate of server.
+	// env: "GRPC_SERVER_TLS_CERT", flag: "tlscert".
+	GRPCServerTLSCert string `env:"GRPC_SERVER_TLS_CERT"`
+
+	// GRPCServerTLSKey - TLS certificate key of server.
+	// env: "GRPC_SERVER_TLS_KEY", flag: "tlskey".
+	GRPCServerTLSKey string `env:"GRPC_SERVER_TLS_KEY"`
+
+	// DatabaseDsn - database connection string.
+	// env: "DATABASE_DSN", flag: "d".
+	DatabaseDsn string `env:"DATABASE_DSN"`
+
+	// LogLevel - logging level.
+	// env: "LOG_LEVEL", flag: "l".
+	LogLevel string `env:"LOG_LEVEL"`
+
+	// ServerSecret - unique 32 chars string to be used as a key of encryption.
+	// env: "SERVER_SECRET", flag: "s".
+	ServerSecret string `env:"SERVER_SECRET"`
+
+	// ShutdownTimeout - server shitdown timeout.
+	// env: "SHUTDOWN_TIMEOUT", flag: "t".
+	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT"`
 }
 
 // LoadConfig loads server configuration from flags/env.

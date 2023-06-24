@@ -31,11 +31,15 @@ func main() {
 
 func run() error {
 	appVer := info.FormatVersion(buildVersion, buildDate, buildCommit)
-	fmt.Println(appVer)
 
 	config, err := LoadConfig(*flag.CommandLine, os.Args[1:])
 	if err != nil {
 		return fmt.Errorf("failed to load flag and ENV settings: %w", err)
+	}
+
+	if config.Version {
+		fmt.Println(appVer)
+		return nil
 	}
 
 	logger, closer, err := gkLog.NewLoggerF(config.LogLevel, config.LogFile)

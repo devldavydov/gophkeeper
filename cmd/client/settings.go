@@ -18,23 +18,30 @@ const (
 	_defaultConfigCACert        = ""
 	_defaultConfigLogLevel      = "INFO"
 	_defaultConfigLogFile       = "client.log"
+	_defaultConfigVersion       = false
 )
 
 // Config is a command line/env client configuration options.
-// Options:
-//   - ServerAddress - address of server to connect.
-//     env: "SERVER_ADDRESS", flag: "a".
-//   - CACert - TLS Certification Authority certificate file.
-//     env: "TLS_CA_CERT", flag: "tlscacert".
-//   - LogLevel - logging level.
-//     env: "LOG_LEVEL", flag: "l".
-//   - LogFile - file to log to.
-//     env: "LOG_FILE", flag: "f".
 type Config struct {
+	// ServerAddress - address of server to connect.
+	// env: "SERVER_ADDRESS", flag: "a".
 	ServerAddress string `env:"SERVER_ADDRESS"`
-	CACert        string `env:"TLS_CA_CERT"`
-	LogLevel      string `env:"LOG_LEVEL"`
-	LogFile       string `env:"LOG_FILE"`
+
+	// CACert - TLS Certification Authority certificate file.
+	// env: "TLS_CA_CERT", flag: "tlscacert".
+	CACert string `env:"TLS_CA_CERT"`
+
+	// LogLevel - logging level.
+	// env: "LOG_LEVEL", flag: "l".
+	LogLevel string `env:"LOG_LEVEL"`
+
+	// LogFile - file to log to.
+	// env: "LOG_FILE", flag: "f".
+	LogFile string `env:"LOG_FILE"`
+
+	// Version - bool flag to show only client version
+	// flag: "version"
+	Version bool
 }
 
 // LoadConfig loads server configuration from flags/env.
@@ -47,6 +54,7 @@ func LoadConfig(flagSet flag.FlagSet, flags []string) (*Config, error) {
 	flagSet.StringVar(&config.CACert, "tlscacert", _defaultConfigCACert, "CA certificate")
 	flagSet.StringVar(&config.LogLevel, "l", _defaultConfigLogLevel, "log level")
 	flagSet.StringVar(&config.LogFile, "f", _defaultConfigLogFile, "log file")
+	flagSet.BoolVar(&config.Version, "version", _defaultConfigVersion, "show client version only")
 
 	flagSet.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])

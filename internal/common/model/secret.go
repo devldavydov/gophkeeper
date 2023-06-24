@@ -18,11 +18,11 @@ var (
 type SecretType int32
 
 const (
-	UnknownSecret SecretType = 0
-	CredsSecret   SecretType = 1
-	TextSecret    SecretType = 2
-	BinarySecret  SecretType = 3
-	CardSecret    SecretType = 4
+	UnknownSecret SecretType = iota
+	CredsSecret
+	TextSecret
+	BinarySecret
+	CardSecret
 )
 
 func (st SecretType) String() string {

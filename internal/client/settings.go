@@ -3,12 +3,11 @@ package client
 import "github.com/devldavydov/gophkeeper/internal/common/nettools"
 
 // Settings rerpesents client application settings.
-//
-// - ServerAddress - address of server to connect.
-//
-// - TLSCACertPath - path to TLS Certificate Authority file.
 type Settings struct {
+	// ServerAddress - address of server to connect.
 	ServerAddress *nettools.Address
+
+	// TLSCACertPath - path to TLS Certificate Authority file.
 	TLSCACertPath string
 }
 
